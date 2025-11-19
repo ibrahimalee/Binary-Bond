@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BinaryBond - P2P Communication</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="branding">
+                <h1 class="app-title">BinaryBond</h1>
+                <p class="app-subtitle">Peer-to-peer presence with effortless clarity</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-ghost" id="focusModeBtn" aria-pressed="false">Focus Mode</button>
+                <div class="connection-status" id="connectionStatus">Disconnected</div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Connection Panel -->
+            <div class="connection-panel" id="connectionPanel">
+                <div class="connection-box">
+                    <h2>Start Connection</h2>
+                    <div class="connection-options">
+                        <button class="btn btn-primary" id="createRoomBtn">Create Room</button>
+                        <div class="divider">OR</div>
+                        <input type="text" class="input-field" id="roomCodeInput" placeholder="Enter room code">
+                        <button class="btn btn-secondary" id="joinRoomBtn">Join Room</button>
+                    </div>
+                    <div class="room-info" id="roomInfo" style="display: none;">
+                        <p>Room Code:</p>
+                        <div class="room-code" id="roomCode"></div>
+                        <button class="btn btn-small" id="copyCodeBtn">Copy</button>
+                    </div>
+                    
+                </div>
+            </div>
+
+            <!-- Communication Panel -->
+            <div class="communication-panel" id="communicationPanel" style="display: none;">
+                <div class="call-insights" id="callInsights">
+                    <div class="insight-pill">
+                        <span class="insight-label">Call duration</span>
+                        <span class="insight-value" id="callDuration">00:00</span>
+                    </div>
+                    <div class="insight-pill">
+                        <span class="insight-label">Role</span>
+                        <span class="insight-value" id="callRole">Guest</span>
+                    </div>
+                </div>
+                <div class="video-container">
+                    <video id="remoteVideo" class="video-element" autoplay playsinline></video>
+                    <video id="localVideo" class="video-element video-local" autoplay playsinline muted></video>
+                    <div class="video-controls">
+                        <button class="control-btn" id="toggleVideoBtn" title="Toggle Video">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M23 7l-7 5 7 5V7z"></path>
+                                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                            </svg>
+                        </button>
+                        <button class="control-btn" id="toggleAudioBtn" title="Toggle Audio">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                <line x1="12" y1="19" x2="12" y2="23"></line>
+                                <line x1="8" y1="23" x2="16" y2="23"></line>
+                            </svg>
+                        </button>
+                        <button class="control-btn control-btn-danger" id="endCallBtn" title="End Call">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M22.54 16.88l-3.29-1.64a2 2 0 0 0-2.12.45L15.54 17.28a16 16 0 0 1-7.07-7.07l1.59-1.59a2 2 0 0 0 .45-2.12L8.87 3.21a2 2 0 0 0-2.33-1.21L3.11 2.61a2 2 0 0 0-1.79 2C1.86 10.61 5.39 17.14 11.39 17.68a2 2 0 0 0 2-.32l4.9-4.9a2 2 0 0 0 .32-2z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <div class="chat-input-container">
+                        <input type="text" class="chat-input" id="chatInput" placeholder="Type a message...">
+                        <button class="btn btn-send" id="sendBtn">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer class="app-footer">
+            <p>Built by <span class="footer-accent">Ibrahemeogoblin</span></p>
+        </footer>
+    </div>
+
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+    <script>
+      Parse.initialize(
+        'Bcadte6i9O8PrlzBD26W2kWjrsNCfLIoDdNRKtz5',    // App ID
+        'Qzy2R1uwWYDBTpOCR8FAP3993AcEH5L0rA7c898G'     // JavaScript Key
+      );
+      Parse.serverURL = 'https://parseapi.back4app.com/';
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>
