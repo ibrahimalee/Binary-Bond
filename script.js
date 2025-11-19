@@ -24,6 +24,30 @@ class BinaryBond {
         this.init();
     }
 
+    // Helper function to call API endpoints
+    async apiCall(endpoint, method = 'GET', body = null) {
+        let url = `/api/${endpoint}`;
+        const options = {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        };
+        
+        if (body && method === 'GET') {
+            // For GET requests, append query params
+            const params = new URLSearchParams(body);
+            url = `${url}?${params}`;
+        } else if (body && method !== 'GET') {
+            // For POST/PUT/etc, include body
+            options.body = JSON.stringify(body);
+        }
+        
+        const response = await fetch(url, options);
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+        return await response.json();
+    }
+
     startOfferPolling() {
         if (this.isCreator) return;
         this.stopOfferPolling();
@@ -41,7 +65,7 @@ class BinaryBond {
     async checkForOffer() {
         if (this.hasRemoteOffer || !this.roomCode || !this.pc) return;
         try {
-            const result = await Parse.Cloud.run('getOffer', { code: this.roomCode });
+            const result = await this.apiCall('getOffer', 'GET', { code: this.roomCode });
             const offer = result?.offer;
             if (offer) {
                 await this.handleOffer(offer);
@@ -69,7 +93,7 @@ class BinaryBond {
     async checkForAnswer() {
         if (this.hasRemoteAnswer || !this.roomCode || !this.pc) return;
         try {
-            const result = await Parse.Cloud.run('getAnswer', { code: this.roomCode });
+            const result = await this.apiCall('getAnswer', 'GET', { code: this.roomCode });
             const answer = result?.answer;
             if (answer) {
                 await this.handleAnswer(answer);
@@ -96,7 +120,7 @@ class BinaryBond {
     async checkForIce() {
         if (!this.roomCode || !this.pc) return;
         try {
-            const response = await Parse.Cloud.run('getIce', { code: this.roomCode });
+            const response = await this.apiCall('getIce', 'GET', { code: this.roomCode });
             const candidates = Array.isArray(response)
                 ? response
                 : (Array.isArray(response?.candidates) ? response.candidates : []);
@@ -172,7 +196,7 @@ class BinaryBond {
     async createRoom() {
         try {
             this.isCreator = true;
-            const response = await Parse.Cloud.run('createRoom');
+            const response = await this.apiCall('createRoom', 'POST');
             const generatedCode = response?.code || response?.roomCode;
             if (!generatedCode) {
                 throw new Error('Room code not returned');
@@ -282,7 +306,7 @@ class BinaryBond {
         this.pc.onicecandidate = async (event) => {
             if (event.candidate && this.roomCode) {
                 try {
-                    await Parse.Cloud.run('addIce', {
+                    await this.apiCall('addIce', 'POST', {
                         code: this.roomCode,
                         candidate: event.candidate
                     });
@@ -335,7 +359,7 @@ class BinaryBond {
             const offer = await this.pc.createOffer();
             await this.pc.setLocalDescription(offer);
 
-            await Parse.Cloud.run('submitOffer', {
+            await this.apiCall('submitOffer', 'POST', {
                 code: this.roomCode,
                 offer
             });
@@ -351,7 +375,7 @@ class BinaryBond {
             const answer = await this.pc.createAnswer();
             await this.pc.setLocalDescription(answer);
 
-            await Parse.Cloud.run('submitAnswer', {
+            await this.apiCall('submitAnswer', 'POST', {
                 code: this.roomCode,
                 answer
             });
