@@ -69,7 +69,7 @@ The app works on both LAN and internet connections:
 ```
 binarybond/
 ├── index.html      # Main UI
-├── style.css       # ThinkPad-inspired theme
+├── style.css       # Colorful theme
 ├── script.js       # WebRTC and app logic
 ├── server.js       # Signaling server
 ├── package.json    # Dependencies
