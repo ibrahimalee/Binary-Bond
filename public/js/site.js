@@ -22,7 +22,7 @@ if (plansHost) {
       const p = plans[el.dataset.plan];
       if (!p) continue;
       el.querySelector('[data-k="peers"]').textContent = `Up to ${p.maxPeers} people per meeting`;
-      el.querySelector('[data-k="length"]').textContent = p.maxMinutes >= 60 ? `Meetings up to ${p.maxMinutes / 60} hours` : `Meetings up to ${p.maxMinutes} minutes`;
+      el.querySelector('[data-k="length"]').textContent = p.maxMinutes >= 60 ? `Meetings up to ${p.maxMinutes / 60} ${p.maxMinutes === 60 ? 'hour' : 'hours'}` : `Meetings up to ${p.maxMinutes} minutes`;
       const mins = el.querySelector('[data-k="minutes"]');
       if (mins) mins.textContent = p.monthlyPeerMinutes ? `${new Intl.NumberFormat().format(p.monthlyPeerMinutes)} participant minutes a month` : 'Unlimited participant minutes';
     }

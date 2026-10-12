@@ -328,3 +328,5 @@ body.embed #lobbyBack, body.embed .center-card > .link-btn { display: none; }
   .sidepanel { position: fixed; top: auto; left: 0; right: 0; bottom: 0; height: 80dvh; z-index: 40; border-radius: 14px 14px 0 0; }
 }
 @media (max-width: 420px) { .hide-xs { display: none !important; } }
+
+.theme-dark .brand-mark { --logo-bg: #1fa493; }
