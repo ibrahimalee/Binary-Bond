@@ -19,7 +19,7 @@ const { safeEq } = require('./tenants');
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const VERSION = require('../package.json').version;
-const PAGES = { '/': 'index.html', '/dashboard': 'dashboard.html', '/admin': 'admin.html', '/embed': 'embed.html', '/privacy': 'privacy.html', '/docs': 'docs.html' };
+const PAGES = { '/': 'index.html', '/dashboard': 'dashboard.html', '/admin': 'admin.html', '/embed': 'index.html', '/privacy': 'privacy.html', '/docs': 'docs.html' };
 
 function createServer(options = {}) {
   const config = options.config || loadConfig();
@@ -95,6 +95,7 @@ function createServer(options = {}) {
   for (const [route, file] of Object.entries(PAGES)) {
     app.get(route, (req, res) => res.set('Cache-Control', 'no-cache').sendFile(path.join(PUBLIC_DIR, file)));
   }
+  app.get(['/package.json', '/embed.html'], (req, res) => res.status(404).sendFile(path.join(PUBLIC_DIR, '404.html')));
   app.get('/sw.js', (req, res) => res.set({ 'Cache-Control': 'no-cache', 'Service-Worker-Allowed': '/' }).sendFile(path.join(PUBLIC_DIR, 'sw.js')));
   app.use(express.static(PUBLIC_DIR, {
     index: false, dotfiles: 'ignore', extensions: ['html'],
