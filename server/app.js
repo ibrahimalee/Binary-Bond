@@ -99,7 +99,9 @@ function createServer(options = {}) {
   app.get('/sw.js', (req, res) => res.set({ 'Cache-Control': 'no-cache', 'Service-Worker-Allowed': '/' }).sendFile(path.join(PUBLIC_DIR, 'sw.js')));
   app.use(express.static(PUBLIC_DIR, {
     index: false, dotfiles: 'ignore', extensions: ['html'],
-    setHeaders: (res, p) => res.set('Cache-Control', /\.(html|webmanifest)$/.test(p) ? 'no-cache' : 'public, max-age=3600'),
+    // Code is revalidated on every load (cheap 304s via ETag) so a deploy never
+    // leaves browsers running a mix of old and new ES modules.
+    setHeaders: (res, p) => res.set('Cache-Control', /\.(svg|png|ico|woff2)$/.test(p) ? 'public, max-age=86400' : 'no-cache'),
   }));
 
   // Stripe needs the raw body for signature checks, so register before express.json().

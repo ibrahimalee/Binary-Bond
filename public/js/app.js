@@ -302,9 +302,9 @@ class App {
     sig.on('knock', ({ peer, hello }) => {
       this.knocks.set(peer, { name: cleanName(hello?.name) });
       sound('knock');
-      this.#renderKnocks();
+      this.#refreshPeopleUi();
     });
-    sig.on('knock-cancel', ({ peer }) => { this.knocks.delete(peer); this.#renderKnocks(); });
+    sig.on('knock-cancel', ({ peer }) => { this.knocks.delete(peer); this.#refreshPeopleUi(); });
     sig.on('settings', (m) => {
       const lockedChanged = m.locked !== this.room.locked;
       this.room.locked = m.locked;
@@ -1072,5 +1072,6 @@ class App {
 }
 
 const app = new App();
+if (store.get('debug', false)) window.binarybond = app; // opt-in: localStorage['bb:debug'] = 'true'
 window.addEventListener('DOMContentLoaded', () => app.init());
 export default app;
