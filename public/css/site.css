@@ -13,8 +13,6 @@
   --section-y: clamp(72px, 9vw, 120px);
 }
 body { font-size: 17px; line-height: 1.65; background: var(--bg); }
-.brand-mark { --logo-bg: #0b6b63; }
-.site-header .brand-mark, .site-footer .brand-mark { --logo-bg: #1fa493; }
 
 /* ---------- display type ---------- */
 .display, .hero h1, .page-head h1, .section-head h2, .feature-copy h2, .cta-band h2 { font-family: var(--display); font-weight: 600; letter-spacing: -.02em; }
@@ -26,7 +24,10 @@ body { font-size: 17px; line-height: 1.65; background: var(--bg); }
 .site-header .container { display: flex; align-items: center; gap: 32px; height: 68px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--text); font-weight: 700; font-size: 18px; letter-spacing: -.01em; text-decoration: none !important; }
 .site-header .brand, .site-footer .brand { color: #fff; }
-.brand-mark { width: 32px; height: 32px; }
+.brand-mark { width: 31px; height: 34px; flex: none; }
+.brand-word { width: 107px; height: 20px; flex: none; }
+.footer-brand .footer-tagline { margin: 14px 0 0; color: var(--on-ink-2); font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; }
+.auth-logo { display: block; width: min(300px, 70%); height: auto; margin: 0 auto 28px; }
 .brand-logo { height: 28px; width: auto; max-width: 160px; object-fit: contain; }
 .nav { display: flex; align-items: center; gap: 2px; flex: 1; }
 .nav a { padding: 8px 13px; border-radius: 8px; color: var(--on-ink-2); font-size: 15px; font-weight: 500; text-decoration: none; transition: color .15s, background-color .15s; }

@@ -7,7 +7,7 @@ body { background: var(--bg); overflow-x: hidden; }
 @keyframes fadeIn { from { opacity: 0; } }
 .hide-sm, .hide-xs { }
 .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--text); font-weight: 700; font-size: 17px; text-decoration: none !important; }
-.brand-mark { width: 28px; height: 28px; }
+.brand-mark { width: 26px; height: 28px; flex: none; }
 .brand-logo { height: 26px; width: auto; max-width: 160px; object-fit: contain; }
 .link-btn { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 14px; font-weight: 500; }
 .link-btn:hover { color: var(--text); text-decoration: none; }
@@ -329,4 +329,3 @@ body.embed #lobbyBack, body.embed .center-card > .link-btn { display: none; }
 }
 @media (max-width: 420px) { .hide-xs { display: none !important; } }
 
-.theme-dark .brand-mark { --logo-bg: #1fa493; }
