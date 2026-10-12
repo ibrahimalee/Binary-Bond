@@ -76,7 +76,8 @@ export function barChart(points, { valueOf = (p) => p.value, labelOf = (p) => p.
 
 function niceMax(v) {
   const p = 10 ** Math.floor(Math.log10(v));
-  for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= v) return m * p;
+  // Multiples that divide evenly into four gridlines, so ticks stay whole numbers.
+  for (const m of [1, 2, 4, 8, 10]) if (m * p >= v) return Math.max(4, m * p);
   return 10 * p;
 }
 const compact = (n) => (n >= 1e6 ? `${+(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${+(n / 1e3).toFixed(1)}k` : `${+n.toFixed(n < 10 ? 1 : 0)}`);

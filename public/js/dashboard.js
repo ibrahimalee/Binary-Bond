@@ -15,18 +15,24 @@ init();
 
 async function init() {
   try { cfg = await api('/api/config'); } catch { cfg = { plans: {}, signup: false, billing: false }; }
-  $('#signOut').addEventListener('click', signOut);
+  // The shared header's 'Sign in' link doubles as 'Sign out' once a key is loaded.
+  $('.header-actions .signin')?.addEventListener('click', (e) => { if (key) { e.preventDefault(); signOut(); } });
   const billing = new URLSearchParams(location.search).get('billing');
   if (billing === 'success') toast('Thanks! Your plan will update in a few seconds.', { type: 'success', timeout: 6000 });
   if (billing) history.replaceState(null, '', '/dashboard');
   if (key) load(); else renderLogin();
 }
 
+function setSignedIn(on) {
+  const link = $('.header-actions .signin');
+  if (link) link.textContent = on ? 'Sign out' : 'Sign in';
+}
+
 function signOut() {
   sessionStorage.removeItem(KEY);
   key = null;
   me = null;
-  $('#signOut').hidden = true;
+  setSignedIn(false);
   renderLogin();
 }
 
@@ -77,7 +83,7 @@ async function load(freshKey = null) {
       api('/v1/me', { token: key }), api('/v1/usage?days=30', { token: key }), api('/v1/rooms', { token: key }),
     ]);
     me = meRes.tenant;
-    $('#signOut').hidden = false;
+    setSignedIn(true);
     render(meRes, usage, rooms.rooms, freshKey);
   } catch (e) {
     if (e.status === 401) { toast('That API key is not valid.', { type: 'error' }); signOut(); } else toast(e.message, { type: 'error' });

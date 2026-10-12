@@ -14,7 +14,6 @@
 .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
 .card .btn-row { justify-content: flex-start; }
 .auth-card .btn-row { justify-content: flex-start; }
-.signout-btn { position: fixed; right: 20px; bottom: 20px; z-index: 20; box-shadow: var(--shadow); }
 
 .stat { display: grid; gap: 4px; }
 .stat-label { font-size: 12.5px; font-weight: 600; color: var(--muted); }
