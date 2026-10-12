@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Private Video Meeting FAQ: Encryption, Privacy and Setup | BinaryBond</title>
+  <meta name="description" content="Answers about BinaryBond: is it really private, does it need an account, who can see my IP address, how many people can join, recording, self-hosting and more.">
+  <meta name="theme-color" content="#fbfaf7">
+  <meta name="referrer" content="no-referrer">
+  <!--#seo-->
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/site.css">
+  <script type="module" src="/js/site.js"></script>
+</head>
+<body>
+  <!--#sprite-->
+  <!--#header-->
+  <main id="main">
+    <section class="page-head">
+      <div class="container">
+        <span class="eyebrow">FAQ</span>
+        <h1>Questions about private video meetings</h1>
+        <p>Straight answers about encryption, privacy, limits and how BinaryBond works.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="faq">
+          <h2 class="faq-group">Privacy and encryption</h2>
+          <details><summary>Is BinaryBond really private?<svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Yes. Meetings are encrypted end to end with a key that is created in your browser and never sent to our server. Audio, video, chat and files travel directly between participants, so the server has nothing readable to store, search or hand over.</p></details>
+          <details><summary>What can the BinaryBond server see?<svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>It sees an opaque meeting ID, how many people are connected and when, and the IP address of each connection while it is open. It cannot see names, messages, files, audio, video or the meeting key.</p></details>
+          <details><summary>How does end-to-end encryption work here?<svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>The meeting key sits in the part of the link after the # symbol, which browsers never send to servers. Your browser derives a meeting ID, an access token and an encryption key from it. The handshake between devices is sealed with AES-256-GCM, and media is protected with DTLS-SRTP.</p></details>
+          <details><summary>How can I check that nobody is intercepting my call?<svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Open the safety number for another participant and read the four groups of digits aloud. If you both see the same numbers, your connection is not being intercepted.</p></details>
+          <details><summary>Does BinaryBond store or record my meetings?<svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>No. Nothing is recorded or kept on the server, and a meeting disappears when the last person leaves. Participants can record only if everyone in the meeting agrees, and the file is saved on the recording person's own device.</p></details>
+          <details><summary>Does BinaryBond use cookies or analytics?<svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>No. There are no cookies, no analytics and no scripts or fonts loaded from other companies.</p></details>
+
+          <h2 class="faq-group">Using BinaryBond</h2>
+          <details><summary>Do I need an account or an app?<svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>No. BinaryBond runs in Chrome, Edge, Firefox and Safari on desktop and mobile. Open the meeting link, enter a name and join.</p></details>
+          <details><summary>How many people can join a meeting?<svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Up to 4 on the free tier and up to 8 on the Business plan. Every participant connects directly to every other participant, which keeps calls private but limits very large meetings.</p></details>
+          <details><summary>Can I control who joins?<svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Yes. Turn on the waiting room to approve each person, lock the meeting once everyone has arrived, remove a participant at any time, or schedule the meeting to end automatically.</p></details>
+          <details><summary>Can I meet without sharing a link?<svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Yes. On the Join page, choose Passphrase. Everyone enters the same meeting name and passphrase, and the key is derived on each device. Nothing needs to be sent.</p></details>
+
+          <h2 class="faq-group">Networks and hosting</h2>
+          <details><summary>Will other participants see my IP address?<svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>In a direct call, yes, as with any peer-to-peer service. If relay mode is available, turn on Hide IP addresses before you start and everyone's media passes through an encrypted relay instead.</p></details>
+          <details><summary>Why does a call sometimes fail to connect?<svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Strict firewalls can block direct connections. Use the Test my connection button in the lobby to see what your network allows, and ask the host to enable relay mode if your network blocks UDP.</p></details>
+          <details><summary>Can I run BinaryBond on my own server?<svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Yes. The project includes a Docker setup with automatic HTTPS and a TURN relay, plus settings for your own limits and branding. See the developer documentation for details.</p></details>
+          <details><summary>Can I add BinaryBond to my own app?<svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Yes. Create a session token on your server and mount the call with the embed SDK. You get webhooks, usage reporting and white-label branding on the Business plan.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-band">
+      <div class="container">
+        <div><h2>Ready to try it?</h2><p>Start a private meeting in one click. No account needed.</p></div>
+        <a class="btn btn-primary btn-lg" href="/new">Start a meeting</a>
+      </div>
+    </section>
+  </main>
+  <!--#footer-->
+</body>
+</html>

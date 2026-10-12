@@ -72,7 +72,7 @@
 .feature-row { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
 .feature-row + .feature-row { margin-top: 96px; }
 .feature-row.reverse .feature-media { order: -1; }
-.feature-copy h3 { font-size: clamp(24px, 2.6vw, 32px); margin-bottom: 14px; }
+.feature-copy h2, .feature-copy h3 { font-size: clamp(24px, 2.6vw, 32px); margin-bottom: 14px; }
 .feature-copy > p { font-size: 17px; color: var(--text-2); }
 .checks { list-style: none; padding: 0; margin: 20px 0 0; display: grid; gap: 10px; }
 .checks li { display: flex; gap: 10px; align-items: flex-start; color: var(--text-2); font-size: 15.5px; }
@@ -309,3 +309,11 @@
   .hero-inner { grid-template-columns: 1fr; padding-block: 56px; }
   .hero-floats { display: none; }
 }
+.skip-link { position: absolute; left: 12px; top: -48px; z-index: 100; padding: 8px 14px; border-radius: 8px; background: var(--ink); color: #fff; font-weight: 600; }
+.skip-link:focus { top: 12px; text-decoration: none; }
+.promise-more { margin: 28px 0 0; text-align: center; color: var(--text-2); }
+.faq-group { margin: 40px 0 4px; font-size: 20px; }
+.faq-group:first-child { margin-top: 0; }
+.table-scroll { overflow-x: auto; border-radius: 12px; }
+.compare th[scope="row"] { font-weight: 600; background: transparent; text-transform: none; letter-spacing: 0; font-size: 15px; color: var(--text); }
+.compare-note { max-width: 760px; margin: 20px 0 0; font-size: 14px; }

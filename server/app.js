@@ -20,8 +20,10 @@ const { safeEq } = require('./tenants');
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const VERSION = require('../package.json').version;
+const { buildHead, robotsTxt, sitemapXml, isNoindex } = require('./seo');
 const PAGES = {
   '/': 'index.html', '/security': 'security.html', '/pricing': 'pricing.html', '/developers': 'developers.html',
+  '/faq': 'faq.html', '/compare': 'compare.html',
   '/privacy': 'privacy.html', '/terms': 'terms.html', '/join': 'join.html', '/new': 'new.html',
   '/room': 'room.html', '/embed': 'room.html', '/dashboard': 'dashboard.html', '/admin': 'admin.html',
 };
@@ -105,11 +107,13 @@ function createServer(options = {}) {
   // header and footer), so every page stays in sync without a build step.
   const pageCache = new Map();
   const read = (f) => fs.readFileSync(path.join(PUBLIC_DIR, f), 'utf8');
-  const renderPage = (file, route) => {
-    const cacheKey = `${route}:${file}`;
+  const renderPage = (file, route, origin) => {
+    const cacheKey = `${route}:${file}:${origin}`;
     if (process.env.NODE_ENV === 'production' && pageCache.has(cacheKey)) return pageCache.get(cacheKey);
     const header = read('partials/header.html').replace(`href="${route}"`, `href="${route}" aria-current="page"`);
-    const html = read(file)
+    const raw = read(file);
+    const html = raw
+      .replace('<!--#seo-->', buildHead({ route, html: raw, origin, brand: config.brandName }))
       .replace('<!--#sprite-->', read('icons.svg'))
       .replace('<!--#header-->', header)
       .replace('<!--#footer-->', read('partials/footer.html'));
@@ -117,9 +121,14 @@ function createServer(options = {}) {
     return html;
   };
   for (const [route, file] of Object.entries(PAGES)) {
-    app.get(route, (req, res) => res.set('Cache-Control', 'no-cache').type('html').send(renderPage(file, route)));
+    app.get(route, (req, res) => {
+      if (isNoindex(route)) res.set('X-Robots-Tag', 'noindex, nofollow');
+      res.set('Cache-Control', 'no-cache').type('html').send(renderPage(file, route, baseUrl(req)));
+    });
   }
   app.get('/docs', (req, res) => res.redirect(301, '/developers'));
+  app.get('/robots.txt', (req, res) => res.set('Cache-Control', 'public, max-age=3600').type('text/plain').send(robotsTxt(baseUrl(req))));
+  app.get('/sitemap.xml', (req, res) => res.set('Cache-Control', 'public, max-age=3600').type('application/xml').send(sitemapXml(baseUrl(req), PUBLIC_DIR, PAGES)));
   app.get(['/package.json', '/partials/*', ...Object.values(PAGES).map(f => `/${f}`)], (req, res) => res.status(404).sendFile(path.join(PUBLIC_DIR, '404.html')));
   app.get('/sw.js', (req, res) => res.set({ 'Cache-Control': 'no-cache', 'Service-Worker-Allowed': '/' }).sendFile(path.join(PUBLIC_DIR, 'sw.js')));
   app.use(express.static(PUBLIC_DIR, {

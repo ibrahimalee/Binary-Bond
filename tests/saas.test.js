@@ -181,7 +181,7 @@ test('pages, sdk headers and CSP host hardening', async (t) => {
   const http = require('http');
   const bb = await startServer();
   t.after(() => bb.close());
-  for (const p of ['/', '/security', '/pricing', '/developers', '/docs', '/privacy', '/terms', '/join', '/new', '/room', '/embed', '/dashboard', '/admin']) {
+  for (const p of ['/', '/security', '/pricing', '/developers', '/faq', '/compare', '/docs', '/privacy', '/terms', '/join', '/new', '/room', '/embed', '/dashboard', '/admin']) {
     const r = await api(bb, 'GET', p);
     assert.equal(r.status, 200, p);
     if (p !== '/new') assert.match(r.text, /<symbol id="i-logo"/, `${p} should have the icon sprite inlined`);
