@@ -11,6 +11,8 @@ import { peoplePanel, securityPanel, settingsPanel } from './panels.js';
 import { toast, modal, confirmDialog, popover, sound, applyTheme, copyText } from './ui.js';
 import { qrSvg } from './qr.js';
 import { Board } from './board.js';
+import { Recorder } from './recorder.js';
+import { Captions } from './captions.js';
 
 const REACTIONS = ['👍', '👏', '😂', '❤️', '🎉', '😮', '🤔', '👋'];
 const DENY_TEXT = {
@@ -50,6 +52,8 @@ class App {
     this.transfers = new Transfers((id) => this.peers.get(id));
     this.chat = new Chat(this);
     this.board = new Board(this);
+    this.recorder = new Recorder(this);
+    this.captions = new Captions(this);
     this.talk = new Map(); // id -> ms spoken this call (local only, never sent)
   }
 
@@ -374,6 +378,8 @@ class App {
       if (this.chat.ttl) peer.send({ type: 'chat-ttl', ttl: this.chat.ttl });
       if (store.get('dataSaver', false)) peer.send({ type: 'video-pref', on: false });
       this.board.syncTo(peer);
+      this.captions.peerOpened(peer);
+      if (this.recorder.recording) { peer.send({ type: 'rec-state', on: true }); this.recorder.peerJoined(id); }
       this.chat.syncPolls(peer);
       this.#updateTile(id);
     });
@@ -398,6 +404,9 @@ class App {
     this.tiles.get(id)?.el.remove();
     this.tiles.delete(id);
     this.transfers.peerGone(id);
+    this.recorder.peerLeft(id);
+    this.captions.peerLeft(id);
+    if (this.recorder.remote.delete(id)) this.onRecordingChanged();
     if (this.pinned === id) this.pinned = null;
     if (announce) { sound('leave'); this.chat.system(`${name} left`, 'log-out'); }
     this.#afterPeersChanged();
@@ -449,6 +458,20 @@ class App {
         break;
       case 'wb-open': case 'wb-seg': case 'wb-undo': case 'wb-clear': case 'wb-sync':
         this.board.handle(id, m);
+        break;
+      case 'rec-request':
+        this.#consentPrompt(id, m.id);
+        break;
+      case 'rec-consent':
+        this.recorder.handleConsent(id, m);
+        break;
+      case 'rec-state':
+        if (m.on) this.recorder.remote.set(id, Date.now()); else this.recorder.remote.delete(id);
+        this.chat.system(m.on ? `${p.info.name} started recording (everyone agreed)` : `${p.info.name} stopped recording`, 'activity');
+        this.onRecordingChanged();
+        break;
+      case 'cc-want': case 'cc':
+        this.captions.handle(id, m);
         break;
       case 'video-pref':
         p.setSendVideo(m.on !== false);
@@ -680,6 +703,9 @@ class App {
       if (e.dataTransfer?.files?.length) this.shareFiles([...e.dataTransfer.files]);
     });
     new ResizeObserver(() => this.#layout()).observe(stage);
+    stage.append(this.captions.overlay);
+    this.captions.overlay.hidden = true;
+    setInterval(() => { if (this.recorder.recording) this.onRecordingChanged(); }, 1000);
   }
 
   toggleMic(force) {
@@ -725,6 +751,7 @@ class App {
   }
 
   #afterSelfChange() {
+    this.captions.update();
     this.#refreshDock();
     this.refreshSelfTile();
     this.broadcastState();
@@ -760,6 +787,8 @@ class App {
       { label: 'Share screen', icon: 'screen', run: () => this.toggleScreen(), hint: 'S' },
       { label: this.board.open ? 'Hide whiteboard' : 'Whiteboard', icon: 'pen', run: () => this.toggleBoard(!this.board.open), hint: 'W' },
       { label: 'Create a poll', icon: 'chart', run: () => { this.openSide('chat'); this.chat.pollDialog(); } },
+      { label: this.captions.wanted ? 'Turn off captions' : 'Live captions (on-device)', icon: 'chat', run: () => this.toggleCaptions() },
+      { label: this.recorder.recording ? `Stop recording (${this.recorder.elapsed()})` : 'Record with everyone\'s consent', icon: 'activity', run: () => this.toggleRecording(), danger: this.recorder.recording },
       { label: this.hand ? 'Lower hand' : 'Raise hand', icon: 'hand', run: () => this.toggleHand(), hint: 'H' },
       { label: 'Picture in picture', icon: 'pip', run: () => this.pip(this.pinned || [...this.peers.keys()][0] || 'me'), disabled: !document.pictureInPictureEnabled },
       { label: 'Fullscreen', icon: 'maximize', run: () => this.#fullscreen(), hint: 'F' },
@@ -1038,6 +1067,66 @@ class App {
 
   talkTime(id) { return this.talk.get(id) || 0; }
 
+  async toggleCaptions() {
+    if (this.captions.wanted) { await this.captions.setWanted(false); return; }
+    let status = await this.captions.probe();
+    if (status === 'downloadable') {
+      toast('Downloading the on-device speech model…', { timeout: 3000 });
+      status = (await this.captions.install()) ? 'available' : 'unsupported';
+      this.captions.status = status;
+    }
+    await this.captions.setWanted(true);
+    toast(status === 'available'
+      ? 'Live captions on. Speech is transcribed on each speaker\'s own device, never in the cloud.'
+      : 'Captions on. Your browser can\'t transcribe privately, so only captions from others will appear.', { timeout: 5000 });
+  }
+
+  async toggleRecording() {
+    if (this.recorder.recording) { this.recorder.stop(); toast('Recording saved to your device.', { type: 'success' }); return; }
+    const ok = await confirmDialog({ title: 'Record this call?', message: 'Everyone in the call will be asked for consent. Recording starts only if all of them agree, and the file is created and saved only on this device.', confirm: 'Ask for consent' });
+    if (!ok) return;
+    toast('Waiting for everyone to agree…', { timeout: 4000 });
+    try {
+      const r = await this.recorder.request();
+      if (r && !r.granted) this.onRecordingDenied(r);
+      else if (this.recorder.recording) toast('Recording started. Everyone can see the REC indicator.', { type: 'success' });
+    } catch (e) { toast(e.message, { type: 'error' }); }
+  }
+
+  onRecordingDenied(r) {
+    const names = (r.who || []).map(id => this.nameOf(id)).join(', ');
+    toast(r.reason === 'timeout' ? `No answer from ${names || 'a participant'}: not recording.` : `${names || 'Someone'} declined: not recording.`, { type: 'warn', timeout: 6000 });
+  }
+
+  onRecordingChanged() {
+    const pill = $('#recPill');
+    if (!pill) return;
+    const others = [...this.recorder.remote.keys()].map(id => this.nameOf(id));
+    const mine = this.recorder.recording;
+    pill.hidden = !mine && !others.length;
+    pill.querySelector('span').textContent = mine ? `REC ${this.recorder.elapsed()}` : `REC · ${others.join(', ')}`;
+  }
+
+  #consentPrompt(peer, reqId) {
+    const name = this.nameOf(peer);
+    sound('knock');
+    let answered = false;
+    const answer = (ok) => { if (answered) return; answered = true; clearTimeout(timer); this.sendTo(peer, { type: 'rec-consent', id: reqId, ok }); };
+    const dlg = modal({
+      title: 'Allow recording?',
+      body: h('div', h('p', h('strong', name), ' wants to record this call, including your audio and video.'),
+        h('ul.list-plain', h('li', icon('check', 'yes'), 'The recording is made and saved only on their device'),
+          h('li', icon('check', 'yes'), 'Nothing is uploaded to any server'),
+          h('li', icon('info', 'no'), 'You\'ll see a REC indicator for as long as it runs'))),
+      actions: [
+        { label: 'Decline', kind: 'btn-ghost', run: () => answer(false) },
+        { label: 'Allow', kind: 'btn-primary', run: () => answer(true) },
+      ],
+      onClose: () => answer(false),
+    });
+    const timer = setTimeout(() => { answer(false); dlg.close(); }, 28000);
+  }
+
   refreshSettings() { if (this.side === 'settings') this.#renderSide(); }
 
   async enableNotifications(on) {
@@ -1088,6 +1177,10 @@ class App {
     this.tiles.clear();
     this.knocks.clear();
     this.chat.clear();
+    this.recorder.stop();
+    this.recorder.remote.clear();
+    this.onRecordingChanged();
+    this.captions.reset();
     this.toggleBoard(false, { silent: true });
     this.board.clear(false);
     this.talk.clear();

@@ -1,11 +1,12 @@
 // App-shell service worker. Network-first so deploys take effect immediately;
 // the cache is only an offline fallback. API, websocket and dashboard data are
 // never cached.
-const CACHE = 'bb-shell-v2';
+const CACHE = 'bb-shell-v3';
 const SHELL = [
   '/', '/css/app.css', '/icon.svg', '/manifest.webmanifest',
   '/js/app.js', '/js/util.js', '/js/crypto.js', '/js/signaling.js', '/js/mesh.js', '/js/media.js',
   '/js/transfer.js', '/js/chat.js', '/js/panels.js', '/js/ui.js', '/js/qr.js',
+  '/js/board.js', '/js/recorder.js', '/js/captions.js',
 ];
 
 self.addEventListener('install', (e) => {

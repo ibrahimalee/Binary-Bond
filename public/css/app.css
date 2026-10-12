@@ -631,3 +631,11 @@ body.embed .topnav { position: absolute; left: 0; right: 0; background: transpar
 .talk-bar { display: block; height: 3px; border-radius: 3px; background: var(--surface-3); margin-top: 5px; overflow: hidden; }
 .talk-bar i { display: block; height: 100%; background: var(--grad); border-radius: 3px; }
 .hand-n { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--warn); color: #1a1205; font-size: 12px; font-weight: 800; flex: none; }
+
+/* ---------- recording & captions ---------- */
+.pill-rec { color: #fff; background: rgba(244, 63, 94, .9); border-color: transparent; font-variant-numeric: tabular-nums; }
+.pill-rec i { width: 8px; height: 8px; border-radius: 50%; background: #fff; animation: blink 1.2s infinite; }
+.captions { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 7; width: min(760px, 92%); display: grid; gap: 6px; pointer-events: none; }
+.cc-line { justify-self: center; max-width: 100%; padding: 8px 14px; border-radius: 12px; background: rgba(5, 6, 12, .82); color: #fff; font-size: clamp(14px, 1.6vw, 18px); line-height: 1.4; backdrop-filter: blur(8px); box-shadow: var(--shadow-1); animation: viewIn .2s var(--ease); }
+.cc-line b { margin-right: 8px; font-weight: 700; }
+.cc-line.interim span { opacity: .8; }
