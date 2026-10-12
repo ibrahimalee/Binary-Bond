@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "start": "node server/index.js",
-    "dev": "nodemon --watch server server/index.js",
+    "dev": "node --watch server/index.js",
     "test": "node --test tests/*.test.js"
   },
   "engines": {
@@ -23,10 +23,7 @@
   "author": "Ibrahim Ali",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.21.2",
-    "ws": "^8.18.3"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
+    "express": "^4.22.3",
+    "ws": "^8.22.0"
   }
 }

@@ -1,0 +1,8 @@
+{$DOMAIN} {
+	encode zstd gzip
+	# Never log client IPs or full URLs: the access log is disabled entirely.
+	log {
+		output discard
+	}
+	reverse_proxy app:3000
+}

@@ -1,0 +1,64 @@
+# Production stack: BinaryBond + Caddy (automatic HTTPS) + coturn (TURN/STUN).
+#   cp .env.example .env   # fill in DOMAIN, secrets
+#   docker compose up -d
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PUBLIC_URL: https://${DOMAIN}
+      BB_TRUST_PROXY: "1"
+      BB_STUN_URLS: stun:${DOMAIN}:3478
+      BB_TURN_URLS: turn:${DOMAIN}:3478?transport=udp,turn:${DOMAIN}:3478?transport=tcp,turns:${DOMAIN}:5349?transport=tcp
+    volumes:
+      - bbdata:/data
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+  coturn:
+    image: coturn/coturn:4.6
+    restart: unless-stopped
+    network_mode: host # TURN needs a wide UDP port range; host networking avoids NAT on NAT
+    command:
+      - -n
+      - --log-file=stdout
+      - --no-cli
+      - --fingerprint
+      - --use-auth-secret
+      - --static-auth-secret=${BB_TURN_SECRET}
+      - --realm=${DOMAIN}
+      - --listening-port=3478
+      - --tls-listening-port=5349
+      - --min-port=49160
+      - --max-port=49999
+      - --no-multicast-peers
+      - --denied-peer-ip=0.0.0.0-0.255.255.255
+      - --denied-peer-ip=10.0.0.0-10.255.255.255
+      - --denied-peer-ip=127.0.0.0-127.255.255.255
+      - --denied-peer-ip=169.254.0.0-169.254.255.255
+      - --denied-peer-ip=172.16.0.0-172.31.255.255
+      - --denied-peer-ip=192.168.0.0-192.168.255.255
+      - --no-tcp-relay
+      - --stale-nonce=600
+      - --simple-log
+
+volumes:
+  bbdata:
+  caddy_data:
+  caddy_config:
