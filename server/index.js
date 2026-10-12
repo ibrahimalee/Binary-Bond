@@ -1,4 +1,7 @@
 'use strict';
+// Load ./.env when present (Node >= 20.12). Real environment variables win.
+try { process.loadEnvFile(); } catch { /* no .env file */ }
+
 const { createServer } = require('./app');
 const { loadConfig } = require('./config');
 const { startStunServer } = require('./stun');

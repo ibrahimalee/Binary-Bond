@@ -1,1 +1,146 @@
-<!doctype html><title>docs</title>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Developers — BinaryBond</title>
+  <meta name="description" content="Embed end-to-end encrypted calls in your product with the BinaryBond API and SDK.">
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="dark light">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/console.css">
+  <script type="module" src="/js/static-page.js"></script>
+</head>
+<body>
+  <!--#sprite-->
+  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+  <nav class="topnav">
+    <a class="brand" href="/"><svg class="brand-mark"><use href="#i-logo"/></svg><span class="brand-name">BinaryBond</span></a>
+    <div class="topnav-links"><a href="/">App</a><a href="/privacy">Privacy</a></div>
+    <div class="topnav-actions"><a class="btn btn-primary btn-sm" href="/dashboard">Dashboard</a></div>
+  </nav>
+  <article class="prose">
+    <h1>Build private calls into your product</h1>
+    <p>BinaryBond gives you end-to-end encrypted video, voice, chat and file sharing with one script tag. Your users' media and messages flow directly between their devices; neither you nor the BinaryBond server can read them.</p>
+    <nav class="toc" aria-label="On this page">
+      <a href="#quickstart">Quickstart</a><a href="#sessions">Sessions</a><a href="#sdk">Embed SDK</a><a href="#events">Events</a>
+      <a href="#webhooks">Webhooks</a><a href="#api">REST API</a><a href="#plans">Plans &amp; limits</a><a href="#self-host">Self-hosting</a><a href="#security">Security model</a>
+    </nav>
+
+    <h2 id="quickstart">Quickstart</h2>
+    <ol>
+      <li>Get an API key from the <a href="/dashboard">dashboard</a> (or from your server operator).</li>
+      <li>On your <strong>backend</strong>, mint a short-lived session token.</li>
+      <li>In the <strong>browser</strong>, mount the call with that token.</li>
+    </ol>
+    <pre class="code"><code># 1. backend: create a session token (keep your API key server-side)
+curl -X POST https://YOUR_HOST/v1/sessions \
+  -H "Authorization: Bearer $BINARYBOND_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"maxPeers": 4, "ttlSec": 900, "maxMinutes": 60}'
+
+# → { "token": "v1.eyJ0aWQ…", "expiresAt": 1760000000000, "embedUrl": "https://YOUR_HOST/embed?token=…" }</code></pre>
+    <pre class="code"><code>&lt;!-- 2. frontend --&gt;
+&lt;div id="call" style="height: 640px"&gt;&lt;/div&gt;
+&lt;script src="https://YOUR_HOST/sdk.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  const call = BinaryBond.mount('#call', { token: SESSION_TOKEN });
+  // Share call.inviteUrl (or call.room) with the other participants
+  // through your own app. The key never touches any server.
+  call.on('joined', e =&gt; console.log('participants', e.participants));
+&lt;/script&gt;</code></pre>
+    <div class="callout"><svg class="ic"><use href="#i-info"/></svg><p>Add your site's origin under <strong>Allowed embed origins</strong> in the dashboard, otherwise browsers will refuse to frame the call (CSP <code>frame-ancestors</code>).</p></div>
+
+    <h2 id="sessions">Session tokens</h2>
+    <p>A session token authorises <em>creating</em> a room under your workspace: it applies your plan limits, counts usage against your quota and enables your branding. People joining an existing room only need the room key, not a token.</p>
+    <table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>ttlSec</code></td><td>int</td><td>Token lifetime, 30 s – 24 h. Default 900.</td></tr>
+        <tr><td><code>maxPeers</code></td><td>int</td><td>Room capacity, 2 – your plan's maximum.</td></tr>
+        <tr><td><code>maxMinutes</code></td><td>int</td><td>Room time limit, capped by your plan.</td></tr>
+        <tr><td><code>relay</code></td><td>bool</td><td>Force TURN relaying so participants never see each other's IP (plan + server support required).</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="sdk">Embed SDK</h2>
+    <p><code>BinaryBond.mount(target, options)</code> inserts a sandboxed iframe and returns a controller.</p>
+    <table>
+      <thead><tr><th>Option</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>token</code></td><td>Session token from <code>/v1/sessions</code>.</td></tr>
+        <tr><td><code>room</code></td><td>Existing room key to join. Omit to generate a fresh one (read it from <code>call.room</code>).</td></tr>
+        <tr><td><code>height</code>, <code>radius</code>, <code>title</code></td><td>Presentation options for the iframe.</td></tr>
+        <tr><td><code>origin</code></td><td>BinaryBond host. Defaults to wherever <code>sdk.js</code> was loaded from.</td></tr>
+      </tbody>
+    </table>
+    <p>The controller exposes <code>room</code>, <code>inviteUrl</code>, <code>frame</code>, <code>on(type, fn)</code>, <code>off(type, fn)</code> and <code>destroy()</code>.</p>
+
+    <h2 id="events">Events</h2>
+    <table>
+      <thead><tr><th>Event</th><th>Payload</th><th>When</th></tr></thead>
+      <tbody>
+        <tr><td><code>joined</code></td><td><code>{ participants }</code></td><td>The local user entered the call.</td></tr>
+        <tr><td><code>participants</code></td><td><code>{ participants }</code></td><td>Someone joined or left.</td></tr>
+        <tr><td><code>waiting</code></td><td><code>{}</code></td><td>The user is in the host's waiting room.</td></tr>
+        <tr><td><code>left</code></td><td><code>{}</code></td><td>The call ended for the local user.</td></tr>
+      </tbody>
+    </table>
+    <p>Events carry counts only. Names, messages and media never leave the iframe.</p>
+
+    <h2 id="webhooks">Webhooks</h2>
+    <p>Set an endpoint in the dashboard to receive <code>room.created</code>, <code>room.ended</code>, <code>participant.joined</code> and <code>participant.left</code>. Each request is a JSON <code>POST</code>:</p>
+    <pre class="code"><code>{
+  "id": "evt_9f2c…",
+  "type": "room.ended",
+  "created": 1760000000000,
+  "data": { "room": "4be1c0a96f3d2e18", "reason": "empty", "peakPeers": 3, "durationSec": 1820 }
+}</code></pre>
+    <p><code>data.room</code> is a one-way reference: it identifies the room in your logs but can't be used to join. Verify every request using the <code>X-BinaryBond-Signature</code> header:</p>
+    <pre class="code"><code>// Node.js
+const [t, v1] = header.split(',').map(p =&gt; p.split('=')[1]);
+const expected = crypto.createHmac('sha256', WEBHOOK_SECRET).update(`${t}.${rawBody}`).digest('hex');
+const ok = crypto.timingSafeEqual(Buffer.from(v1), Buffer.from(expected))
+  &amp;&amp; Math.abs(Date.now() / 1000 - Number(t)) &lt; 300;</code></pre>
+    <p>Failed deliveries are retried three times with exponential backoff. Endpoints that resolve to private or loopback addresses are refused.</p>
+
+    <h2 id="api">REST API</h2>
+    <p>Authenticate with <code>Authorization: Bearer &lt;api key&gt;</code>. All bodies are JSON.</p>
+    <table>
+      <tbody>
+        <tr><td><span class="method post">POST</span><span class="endpoint">/v1/sessions</span></td><td>Mint a session token (see above).</td></tr>
+        <tr><td><span class="method">GET</span><span class="endpoint">/v1/me</span></td><td>Workspace, plan limits and this month's usage.</td></tr>
+        <tr><td><span class="method patch">PATCH</span><span class="endpoint">/v1/me</span></td><td>Update <code>name</code>, <code>branding</code>, <code>webhook.url</code>, <code>domains</code>.</td></tr>
+        <tr><td><span class="method post">POST</span><span class="endpoint">/v1/me/rotate-key</span></td><td>Issue a new API key and revoke the current one.</td></tr>
+        <tr><td><span class="method">GET</span><span class="endpoint">/v1/usage?days=30</span></td><td>Daily rooms, participant-seconds, joins and peak concurrency.</td></tr>
+        <tr><td><span class="method">GET</span><span class="endpoint">/v1/rooms</span></td><td>Live rooms created with your tokens.</td></tr>
+        <tr><td><span class="method post">POST</span><span class="endpoint">/v1/webhook/test</span></td><td>Send a signed <code>ping</code> event to your endpoint.</td></tr>
+        <tr><td><span class="method post">POST</span><span class="endpoint">/v1/billing/checkout</span></td><td><code>{ plan }</code> → Stripe Checkout URL (when billing is enabled).</td></tr>
+        <tr><td><span class="method post">POST</span><span class="endpoint">/v1/billing/portal</span></td><td>Stripe customer portal URL.</td></tr>
+      </tbody>
+    </table>
+    <p>Errors use HTTP status codes with <code>{ "error": "message" }</code>. Requests are rate limited per IP; you'll receive <code>429</code> when over the limit.</p>
+
+    <h2 id="plans">Plans &amp; limits</h2>
+    <div id="plansTable"><p class="muted">Loading plans…</p></div>
+    <p>Calls are full-mesh peer-to-peer, so every participant uploads one stream per other participant. Video bitrate adapts automatically as rooms grow.</p>
+
+    <h2 id="self-host">Self-hosting</h2>
+    <pre class="code"><code>git clone &lt;your fork&gt; binarybond &amp;&amp; cd binarybond
+cp .env.example .env        # set BB_ADMIN_TOKEN, BB_SECRET, PUBLIC_URL
+docker compose up -d        # app + coturn (TURN/STUN) behind your TLS proxy</code></pre>
+    <p>See <code>README.md</code> for every environment variable, TURN setup and production checklist.</p>
+
+    <h2 id="security">Security model</h2>
+    <ul>
+      <li><strong>Room key</strong>: 128 random bits generated in the browser, carried only in the URL fragment.</li>
+      <li><strong>Derivation</strong>: HKDF-SHA-256 produces the public room ID, a membership token (server keeps only its SHA-256) and an AES-256-GCM key that never leaves the browser.</li>
+      <li><strong>Signaling</strong>: SDP and ICE are sealed with AES-GCM, bound to sender and recipient as associated data, so the server can't read, forge or re-route them. That protects the DTLS fingerprints and prevents server-side man-in-the-middle.</li>
+      <li><strong>Media &amp; data</strong>: DTLS-SRTP and DTLS-SCTP, peer-to-peer (or through TURN, which only sees encrypted packets).</li>
+      <li><strong>Verification</strong>: participants can compare safety numbers derived from both DTLS fingerprints.</li>
+      <li><strong>Server storage</strong>: workspaces, hashed API keys and daily aggregate counters. No room IDs, IPs, names or content.</li>
+    </ul>
+  </article>
+</body>
+</html>

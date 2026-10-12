@@ -1,4 +1,5 @@
 'use strict';
+const fs = require('fs');
 const http = require('http');
 const path = require('path');
 const express = require('express');
@@ -80,6 +81,8 @@ function createServer(options = {}) {
         ? 'camera=(self "*"), microphone=(self "*"), display-capture=(self "*"), fullscreen=(self "*"), geolocation=(), payment=(), usb=(), interest-cohort=()'
         : 'camera=(self), microphone=(self), display-capture=(self), fullscreen=(self), geolocation=(), payment=(), usb=(), interest-cohort=()',
     });
+    // The SDK is meant to be loaded by customer sites.
+    if (req.path === '/sdk.js') res.set({ 'Cross-Origin-Resource-Policy': 'cross-origin', 'Access-Control-Allow-Origin': '*' });
     if (req.secure) res.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
     if (!isEmbed) res.set('X-Frame-Options', 'DENY');
     next();
@@ -92,10 +95,19 @@ function createServer(options = {}) {
   });
 
   // ---- pages & static --------------------------------------------------------
+  // Pages get the shared icon sprite inlined at serve time (one source, no icon flash).
+  const pageCache = new Map();
+  const renderPage = (file) => {
+    if (process.env.NODE_ENV === 'production' && pageCache.has(file)) return pageCache.get(file);
+    const sprite = fs.readFileSync(path.join(PUBLIC_DIR, 'icons.svg'), 'utf8');
+    const html = fs.readFileSync(path.join(PUBLIC_DIR, file), 'utf8').replace('<!--#sprite-->', sprite);
+    pageCache.set(file, html);
+    return html;
+  };
   for (const [route, file] of Object.entries(PAGES)) {
-    app.get(route, (req, res) => res.set('Cache-Control', 'no-cache').sendFile(path.join(PUBLIC_DIR, file)));
+    app.get(route, (req, res) => res.set('Cache-Control', 'no-cache').type('html').send(renderPage(file)));
   }
-  app.get(['/package.json', '/embed.html'], (req, res) => res.status(404).sendFile(path.join(PUBLIC_DIR, '404.html')));
+  app.get(['/package.json', '/embed.html', '/index.html', '/dashboard.html', '/admin.html', '/docs.html', '/privacy.html'], (req, res) => res.status(404).sendFile(path.join(PUBLIC_DIR, '404.html')));
   app.get('/sw.js', (req, res) => res.set({ 'Cache-Control': 'no-cache', 'Service-Worker-Allowed': '/' }).sendFile(path.join(PUBLIC_DIR, 'sw.js')));
   app.use(express.static(PUBLIC_DIR, {
     index: false, dotfiles: 'ignore', extensions: ['html'],
