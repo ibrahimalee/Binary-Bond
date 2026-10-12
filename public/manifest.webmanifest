@@ -5,8 +5,8 @@
   "start_url": "/new",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#0a1413",
-  "theme_color": "#0b6b63",
+  "background_color": "#0a1c1b",
+  "theme_color": "#0a1c1b",
   "icons": [
     {
       "src": "/icon.svg",
@@ -15,9 +15,21 @@
       "purpose": "any"
     },
     {
-      "src": "/icon-maskable.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/img/logo/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/logo/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/logo/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "maskable"
     }
   ]

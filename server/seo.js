@@ -56,7 +56,7 @@ function buildHead({ route, html, origin, brand = 'BinaryBond' }) {
   const graph = [];
   if (route === '/') {
     graph.push(
-      { '@context': 'https://schema.org', '@type': 'Organization', name: brand, url: origin + '/', logo: origin + '/icon.svg' },
+      { '@context': 'https://schema.org', '@type': 'Organization', name: brand, url: origin + '/', logo: origin + '/img/logo/icon-512.png' },
       { '@context': 'https://schema.org', '@type': 'WebSite', name: brand, url: origin + '/', description },
       {
         '@context': 'https://schema.org', '@type': 'SoftwareApplication', name: brand, applicationCategory: 'CommunicationApplication',

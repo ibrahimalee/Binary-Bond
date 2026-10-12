@@ -1,3 +1,5 @@
+<p align="center"><img src="public/img/logo/logo-full.png" alt="BinaryBond: direct, secure, private" width="480"></p>
+
 # BinaryBond
 
 Encrypted video meetings that run directly between devices. No accounts, no tracking, and nothing stored on the server. You can run it for yourself, or as a hosted service with API keys, embeddable calls, usage tracking and billing.
