@@ -39,10 +39,10 @@
 .secret-reveal code { background: transparent; padding: 0; word-break: break-all; font-size: 13px; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
 .color-input { width: 44px; height: 42px; padding: 4px; border-radius: 8px; border: 1px solid var(--border-strong); background: var(--surface); cursor: pointer; }
-pre.code { position: relative; margin: 12px 0 0; padding: 14px; border-radius: 10px; background: #0e1726; color: #dbe3ee; font-size: 12.5px; line-height: 1.6; overflow-x: auto; }
+pre.code { position: relative; margin: 12px 0 0; padding: 14px; border-radius: 10px; background: var(--ink); color: #d9e6e2; font-size: 12.5px; line-height: 1.6; overflow-x: auto; }
 pre.code code { background: none; padding: 0; color: inherit; }
-pre.code .copy-code { position: absolute; top: 6px; right: 6px; color: #aab4c3; }
-pre.code .copy-code:hover { background: #1b2638; color: #fff; }
+pre.code .copy-code { position: absolute; top: 6px; right: 6px; color: #a9bcb8; }
+pre.code .copy-code:hover { background: var(--ink-2); color: #fff; }
 
 .table-wrap { overflow-x: auto; }
 .table { width: 100%; border-collapse: collapse; font-size: 14px; }
