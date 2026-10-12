@@ -377,3 +377,14 @@ body { font-size: 17px; line-height: 1.65; background: var(--bg); }
   .prose table { display: block; overflow-x: auto; white-space: nowrap; }
   .prose td { min-width: 160px; white-space: normal; }
 }
+
+/* ---------- photo page headers ---------- */
+.page-head.has-photo { background-size: cover; background-position: center; }
+.page-head.has-photo::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(10, 28, 27, .96) 0%, rgba(10, 28, 27, .88) 45%, rgba(10, 28, 27, .45) 100%); }
+.page-head.has-photo > .container { position: relative; }
+.ph-security { background-image: url("/img/banners/security.jpg"); }
+.ph-pricing { background-image: url("/img/banners/pricing.jpg"); }
+.ph-developers { background-image: url("/img/banners/developers.jpg"); }
+.ph-faq { background-image: url("/img/banners/faq.jpg"); background-position: 50% 30%; }
+.ph-compare { background-image: url("/img/banners/compare.jpg"); background-position: 50% 30%; }
+.shot-tile img, .mock-row img { object-position: 50% 25%; }
