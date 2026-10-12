@@ -3,10 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BinaryBond | Private, encrypted video meetings</title>
-  <meta name="description" content="Encrypted video meetings that run directly between devices. Start in one click, no account needed, nothing stored.">
+  <title>Private Video Meetings, Encrypted End to End | BinaryBond</title>
+  <meta name="description" content="Start a private video meeting in one click. End-to-end encrypted, no account, no tracking and nothing stored. Peer-to-peer calls with chat and file sharing.">
   <meta name="referrer" content="no-referrer">
   <meta name="theme-color" content="#fbfaf7">
+  <!--#seo-->
+  <link rel="preload" as="image" href="/img/hero-call.jpg" fetchpriority="high">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="stylesheet" href="/css/base.css">
@@ -17,7 +19,7 @@
   <!--#sprite-->
   <!--#header-->
 
-  <main>
+  <main id="main">
     <section class="hero">
       <img class="hero-photo" src="/img/hero-call.jpg" width="1920" height="1080" fetchpriority="high" alt="A woman smiles while talking to a colleague on a video call from her desk">
       <div class="hero-shade" aria-hidden="true"></div>
@@ -83,7 +85,7 @@
         <div class="feature-row">
           <div class="feature-copy">
             <span class="eyebrow">Private by design</span>
-            <h3>Only the people in the meeting can see or hear it</h3>
+            <h2>Only the people in the meeting can see or hear it</h2>
             <p>The meeting key is created in your browser and travels inside the invite link, in a part of the address that browsers never send to a server. Our server passes along encrypted handshakes and nothing else.</p>
             <ul class="checks">
               <li><svg class="ic"><use href="#i-check"/></svg>Calls connect device to device over DTLS-SRTP</li>
@@ -104,7 +106,7 @@
         <div class="feature-row reverse">
           <div class="feature-copy">
             <span class="eyebrow">Host controls</span>
-            <h3>You decide who gets in, and for how long</h3>
+            <h2>You decide who gets in, and for how long</h2>
             <p>Turn on the waiting room and approve each guest yourself. Lock the meeting once everyone has arrived, remove someone in one click, or set the room to close itself at a set time.</p>
             <ul class="checks">
               <li><svg class="ic"><use href="#i-check"/></svg>Waiting room with approve and deny</li>
@@ -127,7 +129,7 @@
         <div class="feature-row">
           <div class="feature-copy">
             <span class="eyebrow">Files and chat</span>
-            <h3>Share files and messages without leaving a trail</h3>
+            <h2>Share files and messages without leaving a trail</h2>
             <p>Files go straight to the people in the call and are checked for integrity on arrival. Photos have their location and camera data removed before they are sent. Messages can disappear on a timer or vanish once read.</p>
             <ul class="checks">
               <li><svg class="ic"><use href="#i-check"/></svg>Transfers up to 2 GB, each one needs the recipient's approval</li>
@@ -154,7 +156,7 @@
         <div class="feature-row reverse">
           <div class="feature-copy">
             <span class="eyebrow">Built-in privacy tools</span>
-            <h3>Show up on your own terms</h3>
+            <h2>Show up on your own terms</h2>
             <p>Blur or pixelate your camera, or change the sound of your voice. Both are applied on your device before anything is sent. If you need to leave fast, one shortcut closes everything and clears local data.</p>
             <ul class="checks">
               <li><svg class="ic"><use href="#i-check"/></svg>Camera blur and pixelation, voice changer</li>
@@ -207,7 +209,7 @@
       <div class="container feature-row">
         <div class="feature-copy">
           <span class="eyebrow">For developers</span>
-          <h3>Add private video calls to your product</h3>
+          <h2>Add private video calls to your product</h2>
           <p>Create a session on your server, drop the SDK into your page and you have encrypted calls with your own branding. Usage tracking, webhooks and billing are included.</p>
           <div class="btn-row"><a class="btn btn-primary" href="/developers">Read the docs</a><a class="btn" href="/dashboard">Get an API key</a></div>
         </div>
@@ -224,9 +226,28 @@ BinaryBond.mount('#call', { token })
       </div>
     </section>
 
+    <section class="section section-alt" aria-labelledby="promise-title">
+      <div class="container">
+        <div class="section-head center">
+          <span class="eyebrow">Our privacy promise</span>
+          <h2 id="promise-title">We built BinaryBond so there is nothing to hand over</h2>
+          <p>Privacy is not a setting you have to find. It is how the product works from the first click.</p>
+        </div>
+        <div class="card-grid">
+          <article class="card"><span class="card-ic"><svg class="ic" aria-hidden="true"><use href="#i-user-x"/></svg></span><h3>No accounts for callers</h3><p>Start or join a meeting without an email address, a phone number or a profile.</p></article>
+          <article class="card"><span class="card-ic"><svg class="ic" aria-hidden="true"><use href="#i-eye-off"/></svg></span><h3>No tracking</h3><p>No cookies, no analytics and no code from other companies. The page only talks to our own server.</p></article>
+          <article class="card"><span class="card-ic"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg></span><h3>No readable content</h3><p>Audio, video, chat and files are encrypted before they leave your device. We never hold the key.</p></article>
+          <article class="card"><span class="card-ic"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg></span><h3>Nothing kept</h3><p>When the last person leaves, the meeting is gone. There are no recordings, transcripts or call logs to request.</p></article>
+          <article class="card"><span class="card-ic"><svg class="ic" aria-hidden="true"><use href="#i-server"/></svg></span><h3>You can host it yourself</h3><p>Run BinaryBond on your own server and keep every connection inside your own infrastructure.</p></article>
+          <article class="card"><span class="card-ic"><svg class="ic" aria-hidden="true"><use href="#i-key"/></svg></span><h3>Verifiable, not just promised</h3><p>Compare safety numbers with the other person to prove nobody is intercepting your call.</p></article>
+        </div>
+        <p class="promise-more"><a href="/security">Read how it works</a> or <a href="/privacy">see the privacy policy</a>.</p>
+      </div>
+    </section>
+
     <section class="section">
       <div class="container">
-        <div class="section-head center"><h2>Common questions</h2></div>
+        <div class="section-head center"><h2>Common questions</h2><p>More answers on the <a href="/faq">full FAQ</a>.</p></div>
         <div class="faq">
           <details><summary>Do I need an account?<svg class="ic"><use href="#i-plus"/></svg></summary><p>No. Click Start a meeting, share the link, and you are in. Accounts exist only for developers who embed BinaryBond in their own products.</p></details>
           <details><summary>Can BinaryBond see or record my meetings?<svg class="ic"><use href="#i-plus"/></svg></summary><p>No. The key that protects a meeting is created in your browser and never sent to us. Our server only helps devices find each other, and the messages it passes along are encrypted with that key.</p></details>

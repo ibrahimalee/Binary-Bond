@@ -3,9 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Security | BinaryBond</title>
-  <meta name="description" content="How BinaryBond keeps meetings private: keys that never leave your browser, encrypted signaling, direct connections and verifiable safety numbers.">
+  <title>How BinaryBond Keeps Video Meetings Private | Security</title>
+  <meta name="description" content="Meeting keys never leave your browser. See how BinaryBond encrypts video calls end to end, what the server can and cannot see, and how to verify a call.">
   <meta name="referrer" content="no-referrer">
+  <!--#seo-->
+  <meta name="theme-color" content="#fbfaf7">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/css/base.css">
   <link rel="stylesheet" href="/css/site.css">
@@ -14,7 +16,7 @@
 <body>
   <!--#sprite-->
   <!--#header-->
-  <main>
+  <main id="main">
     <section class="page-head">
       <div class="container">
         <span class="eyebrow">Security</span>
@@ -26,7 +28,7 @@
     <section class="section">
       <div class="container feature-row">
         <div class="feature-copy">
-          <h3>The key stays in the link</h3>
+          <h2>The key stays in the link</h2>
           <p>When you start a meeting, your browser generates 128 random bits and places them after the <code>#</code> in the meeting link. Browsers never include that part of an address in requests, so the key is never transmitted to us.</p>
           <p>From that key each browser derives three things: a public meeting ID, a membership token and an encryption key. The server learns the ID and keeps only a hash of the token. The encryption key never leaves the device.</p>
         </div>
@@ -67,6 +69,7 @@
 
     <section class="section">
       <div class="container">
+        <div class="section-head"><h2>Security features, built in</h2><p>Each protection works by default. There is nothing to switch on.</p></div>
         <div class="card-grid">
           <article class="card"><span class="card-ic"><svg class="ic"><use href="#i-lock"/></svg></span><h3>Sealed signaling</h3><p>Handshake messages are encrypted with AES-256-GCM and bound to their sender and recipient, so the server cannot read, forge or redirect them.</p></article>
           <article class="card"><span class="card-ic"><svg class="ic"><use href="#i-key"/></svg></span><h3>Safety numbers</h3><p>Each pair of participants can compare a 20-digit number derived from both connection certificates. A match proves no one is in between.</p></article>
