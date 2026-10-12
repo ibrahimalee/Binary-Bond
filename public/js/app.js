@@ -459,7 +459,7 @@ class App {
       h('button', { type: 'button', title: 'Fullscreen', 'aria-label': 'Fullscreen', onclick: () => el.requestFullscreen?.().catch(() => {}) }, icon('maximize')));
     const el = h(`div.tile${self ? '.self' : ''}`, { dataset: { id }, tabIndex: 0 },
       video, h('div.tile-avatar'), status,
-      h('div.tile-bar', h('div.tile-name', micSlot, nameSpan), flags), actions);
+      h('div.tile-bar', h('div.tile-name', micSlot, nameSpan)), flags, actions);
     if (self) this.#makeDraggable(el);
     el.addEventListener('dblclick', () => this.togglePin(id));
     this.tiles.set(id, { el, video, nameSpan, micSlot, flags, status, avatarHost: el.querySelector('.tile-avatar') });

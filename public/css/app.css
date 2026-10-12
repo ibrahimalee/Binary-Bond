@@ -326,7 +326,7 @@ body::before { /* film grain for depth */
 .tile-name .ic { width: 14px; height: 14px; }
 .tile-name .ic.off { color: #fb7185; }
 .tile-name .verified { color: var(--ok); }
-.tile-flags { display: flex; gap: 6px; margin-left: auto; }
+.tile-flags { position: absolute; top: 10px; left: 10px; z-index: 2; display: flex; gap: 6px; pointer-events: none; }
 .tile-flag { height: 28px; min-width: 28px; display: inline-grid; place-items: center; border-radius: 9px; background: rgba(8,9,18,.62); color: #fff; backdrop-filter: blur(10px); padding: 0 7px; }
 .tile-flag .ic { width: 15px; height: 15px; }
 .tile-flag.hand { background: var(--warn); color: #1a1205; animation: wave 1.2s ease-in-out infinite; transform-origin: 70% 80%; }
