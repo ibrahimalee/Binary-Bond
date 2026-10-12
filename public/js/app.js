@@ -10,6 +10,7 @@ import { Chat, avatarEl } from './chat.js';
 import { peoplePanel, securityPanel, settingsPanel } from './panels.js';
 import { toast, modal, confirmDialog, popover, sound, applyTheme, copyText } from './ui.js';
 import { qrSvg } from './qr.js';
+import { Board } from './board.js';
 
 const REACTIONS = ['👍', '👏', '😂', '❤️', '🎉', '😮', '🤔', '👋'];
 const DENY_TEXT = {
@@ -23,6 +24,7 @@ const DENY_TEXT = {
 const END_TEXT = {
   'host-ended': 'The host ended the call for everyone.', expired: 'This room reached its time limit and was closed.',
   'server-shutdown': 'The server restarted. You can rejoin in a moment.',
+  'self-destruct': 'The room self-destructed on schedule. Nothing from it remains on the server.',
 };
 const cleanName = (n) => String(n || '').replace(/[\u0000-\u001f‪-‮⁦-⁩]/g, '').trim().slice(0, 40) || 'Guest';
 
@@ -47,6 +49,8 @@ class App {
     this.token = new URLSearchParams(location.search).get('token');
     this.transfers = new Transfers((id) => this.peers.get(id));
     this.chat = new Chat(this);
+    this.board = new Board(this);
+    this.talk = new Map(); // id -> ms spoken this call (local only, never sent)
   }
 
   // ===========================================================================
@@ -302,6 +306,7 @@ class App {
     sig.on('knock', ({ peer, hello }) => {
       this.knocks.set(peer, { name: cleanName(hello?.name) });
       sound('knock');
+      this.notify('Someone is waiting to join', `${cleanName(hello?.name)} is in the waiting room.`);
       this.#refreshPeopleUi();
     });
     sig.on('knock-cancel', ({ peer }) => { this.knocks.delete(peer); this.#refreshPeopleUi(); });
@@ -309,6 +314,13 @@ class App {
       const lockedChanged = m.locked !== this.room.locked;
       this.room.locked = m.locked;
       this.room.wait = m.wait;
+      if (m.selfDestruct && !this.room.selfDestruct) {
+        const at = new Date(m.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        this.chat.system(`This room will self-destruct at ${at}`, 'flame');
+        toast(`Self-destruct armed: the room ends for everyone at ${at}.`, { type: 'warn', timeout: 6000 });
+      }
+      if (m.expiresAt) this.room.expiresAt = m.expiresAt;
+      this.room.selfDestruct = Boolean(m.selfDestruct);
       $('#lockPill').hidden = !m.locked;
       if (lockedChanged) this.chat.system(m.locked ? 'The room is now locked' : 'The room is unlocked', m.locked ? 'lock' : 'unlock');
       this.#refreshPeopleUi();
@@ -328,7 +340,7 @@ class App {
     const rejoin = this.view === 'call';
     if (rejoin) for (const id of [...this.peers.keys()]) this.removePeer(id, false);
     this.me.peer = m.peer;
-    this.room = { host: m.host, locked: m.locked, wait: m.wait, maxPeers: m.maxPeers, expiresAt: m.expiresAt, relay: m.relay, plan: m.plan };
+    this.room = { host: m.host, locked: m.locked, wait: m.wait, maxPeers: m.maxPeers, expiresAt: m.expiresAt, relay: m.relay, plan: m.plan, selfDestruct: m.selfDestruct };
     this.ice = m.ice;
     this.forceRelay = Boolean(m.relay || (store.get('relay', false) && this.cfg?.turn));
     for (const k of m.waiting || []) this.knocks.set(k.peer, { name: cleanName(k.hello?.name) });
@@ -360,6 +372,9 @@ class App {
     peer.on('open', () => {
       peer.send(this.stateMsg());
       if (this.chat.ttl) peer.send({ type: 'chat-ttl', ttl: this.chat.ttl });
+      if (store.get('dataSaver', false)) peer.send({ type: 'video-pref', on: false });
+      this.board.syncTo(peer);
+      this.chat.syncPolls(peer);
       this.#updateTile(id);
     });
     peer.on('ctl', (msg) => this.#onCtl(id, msg));
@@ -418,7 +433,7 @@ class App {
       case 'state': {
         const wasHand = p.info.hand;
         p.info = { name: cleanName(m.name), mic: Boolean(m.mic), cam: Boolean(m.cam), screen: Boolean(m.screen), hand: Boolean(m.hand) };
-        if (p.info.hand && !wasHand) { sound('hand'); toast(`${p.info.name} raised their hand ✋`, { timeout: 3500 }); }
+        if (p.info.hand && !wasHand) { p.handAt = Date.now(); sound('hand'); toast(`${p.info.name} raised their hand ✋`, { timeout: 3500 }); this.notify('Hand raised', `${p.info.name} raised their hand.`); }
         if (p.info.screen && !this.pinned && this.layout === 'auto') this.pinned = id;
         if (!p.info.screen && this.pinned === id && this.autoPinned) this.pinned = null;
         this.autoPinned = p.info.screen;
@@ -428,7 +443,15 @@ class App {
         break;
       }
       case 'chat': case 'chat-react': case 'chat-del': case 'chat-burned': case 'chat-ttl': case 'typing':
+      case 'poll': case 'poll-vote': case 'poll-close':
         this.chat.handle(id, m, p.info.name);
+        if (m.type === 'chat' && document.hidden) this.notify('New encrypted message', `From ${p.info.name}`);
+        break;
+      case 'wb-open': case 'wb-seg': case 'wb-undo': case 'wb-clear': case 'wb-sync':
+        this.board.handle(id, m);
+        break;
+      case 'video-pref':
+        p.setSendVideo(m.on !== false);
         break;
       case 'file-offer': case 'file-accept': case 'file-decline': case 'file-cancel':
         this.transfers.handleCtl(id, m);
@@ -683,6 +706,7 @@ class App {
 
   toggleHand() {
     this.hand = !this.hand;
+    this.handAt = this.hand ? Date.now() : null;
     this.#afterSelfChange();
   }
 
@@ -734,6 +758,8 @@ class App {
       { label: 'Invite people', icon: 'user-plus', run: () => this.inviteModal() },
       '-',
       { label: 'Share screen', icon: 'screen', run: () => this.toggleScreen(), hint: 'S' },
+      { label: this.board.open ? 'Hide whiteboard' : 'Whiteboard', icon: 'pen', run: () => this.toggleBoard(!this.board.open), hint: 'W' },
+      { label: 'Create a poll', icon: 'chart', run: () => { this.openSide('chat'); this.chat.pollDialog(); } },
       { label: this.hand ? 'Lower hand' : 'Raise hand', icon: 'hand', run: () => this.toggleHand(), hint: 'H' },
       { label: 'Picture in picture', icon: 'pip', run: () => this.pip(this.pinned || [...this.peers.keys()][0] || 'me'), disabled: !document.pictureInPictureEnabled },
       { label: 'Fullscreen', icon: 'maximize', run: () => this.#fullscreen(), hint: 'F' },
@@ -890,7 +916,7 @@ class App {
   }
 
   shortcutsModal() {
-    const rows = [['Mute / unmute', ['M']], ['Camera on / off', ['V']], ['Share screen', ['S']], ['Raise hand', ['H']], ['Chat', ['C']], ['People', ['P']], ['Fullscreen', ['F']], ['Push to talk (when enabled)', ['Space']], ['Panic wipe', ['Shift', 'Esc']], ['This help', ['?']]];
+    const rows = [['Mute / unmute', ['M']], ['Camera on / off', ['V']], ['Share screen', ['S']], ['Raise hand', ['H']], ['Chat', ['C']], ['People', ['P']], ['Fullscreen', ['F']], ['Whiteboard', ['W']], ['Push to talk (when enabled)', ['Space']], ['Panic wipe', ['Shift', 'Esc']], ['This help', ['?']]];
     modal({ title: 'Keyboard shortcuts', body: h('dl.shortcuts', rows.flatMap(([l, keys]) => [h('dt', l), h('dd', keys.map(k => h('kbd', k)))])) });
   }
 
@@ -928,7 +954,7 @@ class App {
     m.on('preview', () => { this.refreshSelfTile(); if (this.view === 'lobby') this.#refreshLobby(); });
     m.on('state', () => { if (this.view === 'call') { this.#refreshDock(); this.broadcastState(); this.refreshSelfTile(); } });
     m.on('error', (msg) => toast(msg, { type: 'error' }));
-    m.on('sink', (id) => { for (const t of this.tiles.values()) t.video.setSinkId?.(id).catch(() => {}); });
+    m.on('sink', (id) => { for (const t of this.tiles.values()) t.video?.setSinkId?.(id).catch(() => {}); });
   }
 
   #startLoops() {
@@ -939,7 +965,9 @@ class App {
       const on = this.media.micOn;
       const ring = $('#micBtn .lvl');
       if (ring) ring.style.opacity = on ? String(Math.min(1, lvl * 1.6)) : '0';
-      this.tiles.get('me')?.el.classList.toggle('speaking', on && lvl > 0.12);
+      const meTalking = on && lvl > 0.12;
+      this.tiles.get('me')?.el.classList.toggle('speaking', meTalking);
+      if (meTalking) this.talk.set('me', (this.talk.get('me') || 0) + 100);
       if (!on && lvl > 0.22 && this.media.rawAudio) {
         mutedTalk += 100;
         if (mutedTalk > 700 && Date.now() - lastHint > 20000) {
@@ -950,26 +978,85 @@ class App {
       } else mutedTalk = 0;
       for (const [id, meter] of this.meters) {
         const p = this.peers.get(id);
-        this.tiles.get(id)?.el.classList.toggle('speaking', Boolean(p?.info.mic) && meter.level() > 0.08);
+        const talking = Boolean(p?.info.mic) && meter.level() > 0.08;
+        this.tiles.get(id)?.el.classList.toggle('speaking', talking);
+        if (talking) this.talk.set(id, (this.talk.get(id) || 0) + 100);
       }
     }, 100));
     this.loops.push(setInterval(async () => {
       for (const [id, p] of this.peers) {
         try { p.lastStats = await p.stats(); } catch { continue; }
+        p.poorCount = p.lastStats.quality === 1 ? (p.poorCount || 0) + 1 : 0;
+        if (p.poorCount === 4 && !store.get('dataSaver', false) && !this.suggestedSaver) {
+          this.suggestedSaver = true;
+          toast('Your connection looks weak. Data saver pauses incoming video to keep audio clear.', { type: 'warn', timeout: 10000, action: { label: 'Turn on', run: () => this.setDataSaver(true) } });
+        }
         this.#updateTile(id);
       }
-      if (this.side === 'security') this.#renderSide();
+      // Live panels refresh unless the user is interacting with them.
+      if ((this.side === 'security' || this.side === 'people') && !$('#sideBody').contains(document.activeElement)) this.#renderSide();
     }, 2000));
     this.loops.push(setInterval(() => {
       $('#callTimer').textContent = formatDuration((Date.now() - this.joinedAt) / 1000);
       const left = (this.room.expiresAt - Date.now()) / 1000;
       const pill = $('#expiryPill');
-      pill.hidden = !(left < 600);
-      if (left < 600) pill.querySelector('span').textContent = `${formatDuration(left)} left`;
+      const show = left < 600 || this.room.selfDestruct;
+      pill.hidden = !show;
+      if (show) pill.querySelector('span').textContent = this.room.selfDestruct ? `Self-destructs in ${formatDuration(left)}` : `${formatDuration(left)} left`;
     }, 1000));
   }
 
   #stopLoops() { this.loops.forEach(clearInterval); this.loops = []; }
+
+  // ===========================================================================
+  // whiteboard, data saver, notifications
+  // ===========================================================================
+  toggleBoard(on, { remote = null, silent = false } = {}) {
+    if (on === this.board.open) return;
+    this.board.open = on;
+    if (on) {
+      this.tiles.set('board', { el: this.board.el, board: true });
+      $('#grid').prepend(this.board.el);
+      this.pinned = 'board';
+      if (remote) toast(`${this.nameOf(remote)} opened the whiteboard`, { timeout: 3000 });
+      else this.broadcast({ type: 'wb-open' });
+    } else {
+      this.tiles.delete('board');
+      this.board.el.remove();
+      if (this.pinned === 'board') this.pinned = null;
+      if (!silent && this.view === 'call') toast('Whiteboard hidden. Drawings are kept until the call ends.', { timeout: 2500 });
+    }
+    this.#layout();
+  }
+
+  setDataSaver(on) {
+    store.set('dataSaver', on);
+    this.broadcast({ type: 'video-pref', on: !on });
+    toast(on ? 'Data saver on: others pause their video to you.' : 'Data saver off.', { type: 'success', timeout: 2500 });
+    if (this.side === 'settings') this.#renderSide();
+  }
+
+  talkTime(id) { return this.talk.get(id) || 0; }
+
+  refreshSettings() { if (this.side === 'settings') this.#renderSide(); }
+
+  async enableNotifications(on) {
+    if (on && 'Notification' in window && Notification.permission !== 'granted') {
+      const p = await Notification.requestPermission().catch(() => 'denied');
+      if (p !== 'granted') { toast('Notifications were blocked by the browser.', { type: 'warn' }); store.set('notify', false); return false; }
+    }
+    store.set('notify', on);
+    return on;
+  }
+
+  // Only generic text: message contents are never put in OS notifications.
+  notify(title, body) {
+    if (!document.hidden || !store.get('notify', false) || !('Notification' in window) || Notification.permission !== 'granted') return;
+    try {
+      const n = new Notification(title, { body, icon: '/icon.svg', tag: 'binarybond' });
+      n.onclick = () => { window.focus(); n.close(); };
+    } catch { /* notifications unavailable */ }
+  }
 
   // ===========================================================================
   // leaving
@@ -1001,6 +1088,11 @@ class App {
     this.tiles.clear();
     this.knocks.clear();
     this.chat.clear();
+    this.toggleBoard(false, { silent: true });
+    this.board.clear(false);
+    this.talk.clear();
+    this.suggestedSaver = false;
+    this.handAt = null;
     this.closeSide();
     this.pinned = null;
     this.hand = false;
@@ -1043,7 +1135,7 @@ class App {
         e.preventDefault(); pttActive = true; this.toggleMic(true); return;
       }
       const k = e.key.toLowerCase();
-      const map = { m: () => this.toggleMic(), v: () => this.toggleCam(), s: () => this.toggleScreen(), h: () => this.toggleHand(), c: () => this.toggleSide('chat'), p: () => this.toggleSide('people'), f: () => this.#fullscreen(), '?': () => this.shortcutsModal() };
+      const map = { m: () => this.toggleMic(), v: () => this.toggleCam(), s: () => this.toggleScreen(), h: () => this.toggleHand(), c: () => this.toggleSide('chat'), p: () => this.toggleSide('people'), f: () => this.#fullscreen(), w: () => this.toggleBoard(!this.board.open), '?': () => this.shortcutsModal() };
       if (map[k] && !e.repeat) { e.preventDefault(); map[k](); }
     });
     document.addEventListener('keyup', (e) => {

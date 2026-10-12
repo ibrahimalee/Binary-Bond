@@ -590,3 +590,44 @@ body.embed .topnav { position: absolute; left: 0; right: 0; background: transpar
 .chat-head .ic { width: 15px; height: 15px; }
 .grid.duo .tile.self .tile-flags, .grid.duo .tile.self .tile-actions { display: none; }
 .peer-card .avatar { width: 30px; font-size: 12px; box-shadow: none; }
+
+/* ---------- whiteboard ---------- */
+.tile.board { background: #0e1020; container-type: normal; touch-action: none; }
+.board-canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
+.board-tools { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 3; display: flex; align-items: center; gap: 4px; padding: 6px; border-radius: 14px; background: rgba(12, 14, 26, .85); border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(12px); box-shadow: var(--shadow-2); max-width: calc(100% - 20px); overflow-x: auto; color: #e5e7f0; }
+.board-tools .icon-btn { width: 32px; height: 32px; color: #c5c9db; }
+.board-tools .icon-btn:hover { background: rgba(255,255,255,.08); color: #fff; }
+.board-tools .icon-btn.on { background: var(--accent); color: #fff; }
+.board-tools .ic { width: 17px; height: 17px; }
+.swatch { width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255,255,255,.2); flex: none; transition: transform .15s var(--ease); }
+.swatch.active { transform: scale(1.18); border-color: #fff; box-shadow: 0 0 0 2px rgba(139,92,246,.6); }
+.size { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: none; }
+.size i { display: block; border-radius: 50%; background: #c5c9db; }
+.size.active { background: rgba(255,255,255,.12); }
+.size.active i { background: #fff; }
+.board-sep { width: 1px; height: 20px; background: rgba(255,255,255,.15); margin: 0 4px; flex: none; }
+.board-label { position: absolute; left: 12px; bottom: 10px; display: flex; gap: 6px; align-items: center; font-size: 12px; color: rgba(255,255,255,.55); pointer-events: none; }
+.board-label .ic { width: 14px; height: 14px; }
+
+/* ---------- polls ---------- */
+.poll-card { display: grid; gap: 6px; padding: 12px; border-radius: 16px; background: var(--surface-2); border: 1px solid var(--border); min-width: 240px; max-width: 300px; }
+.msg.mine .poll-card { background: var(--accent-soft); border-color: rgba(139,92,246,.35); }
+.poll-q { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; margin-bottom: 2px; }
+.poll-q .ic { width: 16px; height: 16px; margin-top: 2px; color: var(--accent-2); flex: none; }
+.poll-opt { position: relative; display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--border-strong); background: var(--surface); overflow: hidden; text-align: left; font-size: 13.5px; transition: border-color .2s; }
+.poll-opt:hover:not(:disabled) { border-color: var(--accent); }
+.poll-opt:disabled { cursor: default; }
+.poll-opt.voted { border-color: var(--accent); }
+.poll-fill { position: absolute; inset: 0 auto 0 0; background: var(--accent-soft); transition: width .4s var(--ease); z-index: 0; }
+.poll-opt.voted .poll-fill { background: color-mix(in srgb, var(--accent) 32%, transparent); }
+.poll-label, .poll-pct { position: relative; z-index: 1; }
+.poll-label { flex: 1; }
+.poll-pct { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 12.5px; color: var(--text-2); }
+.poll-foot { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.poll-opts { display: grid; gap: 6px; margin: 6px 0 10px; }
+
+/* ---------- people extras ---------- */
+.talk { margin-left: 4px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.talk-bar { display: block; height: 3px; border-radius: 3px; background: var(--surface-3); margin-top: 5px; overflow: hidden; }
+.talk-bar i { display: block; height: 100%; background: var(--grad); border-radius: 3px; }
+.hand-n { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--warn); color: #1a1205; font-size: 12px; font-weight: 800; flex: none; }

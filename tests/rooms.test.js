@@ -179,3 +179,35 @@ test('join attempts are rate limited per IP', async (t) => {
   assert.equal((await a.next('denied')).reason, 'rate-limited');
   await a.close();
 });
+
+test('host can bring the room end forward (self-destruct) but never extend it', async (t) => {
+  const bb = await startServer();
+  t.after(() => bb.close());
+  const creds = roomCreds();
+  const host = await client(bb);
+  host.send({ t: 'join', ...creds });
+  const j = await host.next('joined');
+  assert.equal(j.selfDestruct, false);
+  const g = await client(bb);
+  g.send({ t: 'join', ...creds });
+  await g.next('joined');
+
+  g.send({ t: 'settings', endInSec: 60 });
+  assert.equal((await g.next('error')).code, 'not-host');
+
+  host.send({ t: 'settings', endInSec: 120 });
+  const s = await g.next('settings');
+  assert.equal(s.selfDestruct, true);
+  assert.ok(s.expiresAt <= Date.now() + 120000 && s.expiresAt < j.expiresAt);
+
+  host.send({ t: 'settings', endInSec: 999999 });
+  const s2 = await g.next('settings');
+  assert.equal(s2.expiresAt, s.expiresAt, 'cannot be extended');
+
+  host.send({ t: 'settings', endInSec: 5 });
+  assert.equal((await g.next('settings')).expiresAt, s.expiresAt, 'below the 30s floor is ignored');
+
+  bb.rooms._destroy(bb.rooms.rooms.get(creds.room), 'self-destruct');
+  assert.equal((await g.next('ended')).reason, 'self-destruct');
+  await Promise.all([host.close(), g.close()]);
+});

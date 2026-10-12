@@ -3,7 +3,7 @@
 // stored on the server.
 
 import { h, icon, randomId, formatBytes, hueOf, initials } from './util.js';
-import { sound } from './ui.js';
+import { sound, modal, toast } from './ui.js';
 
 const QUICK = ['👍', '❤️', '😂', '😮', '🙏', '🔥'];
 const BURN_REVEAL_MS = 10000;
@@ -47,6 +47,7 @@ export class Chat {
       this.typingEl,
       h('div.composer',
         h('button.icon-btn', { type: 'button', title: 'Share files', 'aria-label': 'Share files', onclick: () => this.fileInput.click() }, icon('clip')),
+        h('button.icon-btn.hide-xs', { type: 'button', title: 'Create a poll', 'aria-label': 'Create a poll', onclick: () => this.pollDialog() }, icon('chart')),
         this.burnBtn, this.input, this.fileInput, this.sendBtn));
     this.el.style.display = 'flex';
     this.el.style.flexDirection = 'column';
@@ -135,6 +136,9 @@ export class Chat {
         this.#renderTyping();
         break;
       }
+      case 'poll': case 'poll-vote': case 'poll-close':
+        this.#handlePoll(peerId, m);
+        break;
       default: break;
     }
   }
@@ -306,7 +310,116 @@ export class Chat {
     if (msg?.status && !msg.status.querySelector('.sent')) msg.status.append(h('span.ok.sent', '· sent'));
   }
 
+  // ---- polls ------------------------------------------------------------------------
+  pollDialog() {
+    const q = h('input.input', { maxLength: 200, placeholder: 'What should we decide?', required: true });
+    const opts = h('div.poll-opts');
+    const addOpt = (v = '') => {
+      if (opts.childElementCount >= 6) return;
+      const row = h('div.invite-row', h('input.input', { maxLength: 80, value: v, placeholder: `Option ${opts.childElementCount + 1}` }),
+        h('button.icon-btn', { type: 'button', 'aria-label': 'Remove option', onclick: () => { if (opts.childElementCount > 2) row.remove(); } }, icon('x')));
+      opts.append(row);
+    };
+    addOpt(); addOpt();
+    modal({
+      title: 'Create a poll',
+      body: h('div', h('label.field', h('span.field-label', 'Question'), q), h('span.field-label', 'Options'), opts,
+        h('button.btn.btn-ghost.btn-sm', { type: 'button', onclick: () => addOpt() }, icon('user-plus'), 'Add option'),
+        h('p.field-hint', icon('lock'), 'End-to-end encrypted. Results show counts only, never who voted for what.')),
+      actions: [{
+        label: 'Post poll', kind: 'btn-primary', run: () => {
+          const options = [...opts.querySelectorAll('input')].map(i => i.value.trim()).filter(Boolean);
+          if (!q.value.trim() || options.length < 2) { toast('Add a question and at least two options.', { type: 'warn' }); return true; }
+          const poll = { type: 'poll', id: randomId(6), q: q.value.trim(), options };
+          this.app.broadcast(poll);
+          this.#addPoll({ ...poll, from: 'me' });
+          return false;
+        },
+      }],
+    });
+    setTimeout(() => q.focus(), 50);
+  }
+
+  polls = new Map();
+  pendingVotes = new Map();
+
+  #addPoll({ id, q, options, from }) {
+    if (this.polls.has(id)) return;
+    const poll = { id, q, options, from, votes: new Map(), closed: false };
+    poll.el = h('div.poll-card');
+    this.polls.set(id, poll);
+    this.empty.remove();
+    const wrap = h(`div.msg${from === 'me' ? '.mine' : ''}`, { dataset: { from, ts: String(Date.now()) } },
+      h('div.msg-meta', h('b', from === 'me' ? 'You' : this.app.nameOf(from)), h('span', 'started a poll')), poll.el);
+    this.#append(wrap);
+    for (const v of this.pendingVotes.get(id) || []) poll.votes.set(v.peer, v.idx);
+    this.pendingVotes.delete(id);
+    this.#renderPoll(poll);
+  }
+
+  #vote(poll, idx) {
+    if (poll.closed) return;
+    const next = poll.votes.get('me') === idx ? -1 : idx;
+    if (next < 0) poll.votes.delete('me'); else poll.votes.set('me', next);
+    this.app.broadcast({ type: 'poll-vote', id: poll.id, idx: next });
+    this.#renderPoll(poll);
+  }
+
+  #renderPoll(poll) {
+    const counts = poll.options.map(() => 0);
+    for (const idx of poll.votes.values()) if (counts[idx] !== undefined) counts[idx]++;
+    const total = counts.reduce((s, n) => s + n, 0);
+    const mine = poll.votes.get('me');
+    poll.el.replaceChildren(
+      h('div.poll-q', icon('chart'), h('strong', poll.q)),
+      ...poll.options.map((o, i) => {
+        const pct = total ? Math.round((counts[i] / total) * 100) : 0;
+        const btn = h(`button.poll-opt${mine === i ? '.voted' : ''}`, { type: 'button', disabled: poll.closed, onclick: () => this.#vote(poll, i), 'aria-pressed': String(mine === i) },
+          h('span.poll-fill'), h('span.poll-label', o), h('span.poll-pct', `${pct}%`));
+        btn.firstChild.style.width = `${pct}%`;
+        return btn;
+      }),
+      h('div.poll-foot', h('span', `${total} vote${total === 1 ? '' : 's'}${poll.closed ? ' · closed' : ''}`),
+        poll.from === 'me' && !poll.closed ? h('button.btn.btn-ghost.btn-sm', { type: 'button', onclick: () => { poll.closed = true; this.app.broadcast({ type: 'poll-close', id: poll.id }); this.#renderPoll(poll); } }, 'Close poll') : null));
+  }
+
+  #handlePoll(peerId, m) {
+    if (m.type === 'poll') {
+      if (typeof m.id !== 'string' || typeof m.q !== 'string' || !Array.isArray(m.options)) return;
+      const options = m.options.filter(o => typeof o === 'string').slice(0, 6).map(o => o.slice(0, 80));
+      if (options.length < 2) return;
+      this.#addPoll({ id: m.id.slice(0, 16), q: m.q.slice(0, 200), options, from: peerId });
+      if (m.closed) { const p = this.polls.get(m.id); if (p) { p.closed = true; this.#renderPoll(p); } }
+      sound('message');
+      this.app.onUnread();
+    } else if (m.type === 'poll-vote') {
+      const idx = Number.isInteger(m.idx) ? m.idx : -1;
+      const poll = this.polls.get(m.id);
+      if (!poll) {
+        const list = this.pendingVotes.get(m.id) || [];
+        if (this.pendingVotes.size < 50 && list.length < 20) { list.push({ peer: peerId, idx }); this.pendingVotes.set(m.id, list); }
+        return;
+      }
+      if (poll.closed) return;
+      if (idx < 0 || idx >= poll.options.length) poll.votes.delete(peerId); else poll.votes.set(peerId, idx);
+      this.#renderPoll(poll);
+    } else if (m.type === 'poll-close') {
+      const poll = this.polls.get(m.id);
+      if (poll && poll.from === peerId) { poll.closed = true; this.#renderPoll(poll); }
+    }
+  }
+
+  // New participants get polls we created, plus our own vote on every poll.
+  syncPolls(peer) {
+    for (const p of this.polls.values()) {
+      if (p.from === 'me') peer.send({ type: 'poll', id: p.id, q: p.q, options: p.options, closed: p.closed });
+    }
+    for (const p of this.polls.values()) if (p.votes.has('me')) peer.send({ type: 'poll-vote', id: p.id, idx: p.votes.get('me') });
+  }
+
   clear() {
+    this.polls.clear();
+    this.pendingVotes.clear();
     for (const m of this.messages.values()) { clearTimeout(m.expire); if (m.url) URL.revokeObjectURL(m.url); }
     this.messages.clear();
     this.list.replaceChildren(this.empty);

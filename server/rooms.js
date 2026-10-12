@@ -105,10 +105,7 @@ class RoomManager {
       tenantId: tid, plan: planName, maxPeers,
       createdAt: now, expiresAt: now + maxMinutes * 60000, peak: 0, timers: [],
     };
-    const ttl = room.expiresAt - now;
-    room.timers.push(setTimeout(() => this._destroy(room, 'expired'), ttl));
-    if (ttl > 5 * 60000) room.timers.push(setTimeout(() => this._broadcast(room, { t: 'expiring', at: room.expiresAt }), ttl - 5 * 60000));
-    room.timers.forEach(t => t.unref?.());
+    this._schedule(room);
     this.rooms.set(room.id, room);
     this.stats.roomsCreated++;
     this.usage?.roomCreated(tid);
@@ -153,11 +150,16 @@ class RoomManager {
     const room = this._hostRoom(conn);
     if (!room) return this._err(conn, 'not-host');
     if (typeof msg.locked === 'boolean') room.locked = msg.locked;
+    // Self-destruct: the host may bring the end time forward, never extend it.
+    if (Number.isInteger(msg.endInSec) && msg.endInSec >= 30) {
+      const at = this.now() + msg.endInSec * 1000;
+      if (at < room.expiresAt) { room.expiresAt = at; room.selfDestruct = true; this._schedule(room); }
+    }
     if (typeof msg.wait === 'boolean') {
       room.wait = msg.wait;
       if (!room.wait) for (const peer of [...room.waiting.keys()]) this.admit(conn, { peer, ok: true });
     }
-    this._broadcast(room, { t: 'settings', locked: room.locked, wait: room.wait });
+    this._broadcast(room, { t: 'settings', locked: room.locked, wait: room.wait, expiresAt: room.expiresAt, selfDestruct: Boolean(room.selfDestruct) });
   }
 
   endByHost(conn) {
@@ -196,6 +198,15 @@ class RoomManager {
 
   // ---- internals -----------------------------------------------------------
 
+  _schedule(room) {
+    room.timers.forEach(clearTimeout);
+    const ttl = Math.max(0, room.expiresAt - this.now());
+    room.timers = [setTimeout(() => this._destroy(room, room.selfDestruct ? 'self-destruct' : 'expired'), ttl)];
+    if (ttl > 5 * 60000) room.timers.push(setTimeout(() => this._broadcast(room, { t: 'expiring', at: room.expiresAt }), ttl - 5 * 60000));
+    room.timers.forEach(t => t.unref?.());
+  }
+
+
   _admitInto(room, conn, peer, hello) {
     const existing = [...room.peers.keys()];
     room.peers.set(peer, { conn, joinedAt: this.now(), hello });
@@ -209,7 +220,7 @@ class RoomManager {
       peers: existing.map(p => ({ peer: p, hello: room.peers.get(p).hello })),
       ice: iceServersFor(this.config, peer, this.now()),
       relay: room.relay, maxPeers: room.maxPeers, expiresAt: room.expiresAt,
-      locked: room.locked, wait: room.wait, plan: room.plan,
+      locked: room.locked, wait: room.wait, plan: room.plan, selfDestruct: Boolean(room.selfDestruct),
       waiting: room.host === peer ? [...room.waiting].map(([p, w]) => ({ peer: p, hello: w.hello })) : [],
     });
     for (const [p, m] of room.peers) if (p !== peer) m.conn.send({ t: 'peer-joined', peer, hello });

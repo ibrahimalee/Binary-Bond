@@ -1,6 +1,6 @@
 // People, Security and Settings panels for the call side drawer.
 
-import { h, icon, store } from './util.js';
+import { h, icon, store, formatDuration } from './util.js';
 import { avatarEl } from './chat.js';
 import { applyTheme, confirmDialog } from './ui.js';
 
@@ -31,6 +31,17 @@ export function peoplePanel(app) {
     root.append(sec);
   }
 
+  // Raised hands, in the order they went up.
+  const hands = [];
+  if (app.hand) hands.push({ id: 'me', name: app.me.name + ' (you)', at: app.handAt || 0 });
+  for (const [id, p] of app.peers) if (p.info.hand) hands.push({ id, name: p.info.name, at: p.handAt || 0 });
+  if (hands.length) {
+    hands.sort((a, b) => a.at - b.at);
+    root.append(h('div.side-section', h('h4', `Raised hands (${hands.length})`),
+      hands.map((x, i) => h('div.person', h('span.hand-n', String(i + 1)), avatarEl(x.id, x.name), h('div.person-name', h('strong', x.name), h('small', x.at ? `${formatDuration((Date.now() - x.at) / 1000)} ago` : '')), icon('hand')))));
+  }
+
+  const totalTalk = [...app.talk.values()].reduce((s, v) => s + v, 0) || 1;
   const list = h('div.side-section', h('h4', `In the call (${app.peerCount() + 1})`));
   const row = (id, info, me) => {
     const tags = [];
@@ -42,7 +53,11 @@ export function peoplePanel(app) {
       info.screen ? icon('screen') : null,
       icon(info.mic ? 'mic' : 'mic-off', info.mic ? '' : 'off'),
       icon(info.cam ? 'cam' : 'cam-off', info.cam ? '' : 'off'));
-    const el = h('div.person', avatarEl(me ? 'me' : id, info.name), h('div.person-name', h('strong', info.name), h('small', tags)), icons);
+    const talked = app.talkTime(me ? 'me' : id);
+    const bar = h('span.talk-bar', h('i'));
+    bar.firstChild.style.width = `${Math.round((talked / totalTalk) * 100)}%`;
+    const el = h('div.person', avatarEl(me ? 'me' : id, info.name),
+      h('div.person-name', h('strong', info.name), h('small', tags, talked ? h('span.talk', { title: 'Speaking time (measured locally, never shared)' }, formatDuration(talked / 1000)) : null), talked ? bar : null), icons);
     if (!me) {
       el.append(h('button.icon-btn', {
         type: 'button', 'aria-label': `Options for ${info.name}`,
@@ -59,6 +74,9 @@ export function peoplePanel(app) {
     root.append(h('div.side-section', h('h4', 'Room controls'),
       switchRow('Lock room', 'No one new can join, even with the link', app.room.locked, (v) => app.sig.settings({ locked: v })),
       switchRow('Waiting room', 'Approve each person before they join', app.room.wait, (v) => app.sig.settings({ wait: v })),
+      selectRow('Self-destruct', app.room.selfDestruct ? 'Armed: can be brought forward, never extended' : 'End the room for everyone automatically',
+        [['', app.room.selfDestruct ? 'Armed' : 'Off'], ['300', 'In 5 minutes'], ['900', 'In 15 minutes'], ['1800', 'In 30 minutes'], ['3600', 'In 1 hour']], '',
+        (v) => { if (v) app.sig.settings({ endInSec: Number(v) }); }),
       h('button.btn.btn-danger.btn-block', {
         type: 'button', onclick: async () => {
           if (await confirmDialog({ title: 'End the call for everyone?', message: 'All participants will be disconnected and the room will be destroyed on the server.', confirm: 'End for all', danger: true })) app.endForAll();
@@ -142,11 +160,13 @@ export function settingsPanel(app, { inCall = true } = {}) {
     switchRow('Noise suppression', null, m.prefs.noiseSuppression, (v) => m.setPref('noiseSuppression', v)),
     switchRow('Automatic gain', null, m.prefs.autoGainControl, (v) => m.setPref('autoGainControl', v)),
     switchRow('HD video', 'Uses more bandwidth', m.prefs.hd, (v) => m.setPref('hd', v)),
+    inCall ? switchRow('Data saver', 'Ask others to pause their video to you', store.get('dataSaver', false), (v) => app.setDataSaver(v)) : null,
     switchRow('Mirror my video', 'Only affects your own preview', m.prefs.mirror, (v) => { m.setPref('mirror', v); app.refreshSelfTile(); }),
     inCall ? switchRow('Push to talk', 'Hold Space to speak while muted', store.get('ptt', false), (v) => store.set('ptt', v)) : null));
 
   root.append(h('div.side-section', h('h4', 'Interface'),
     selectRow('Theme', null, [['system', 'System'], ['dark', 'Dark'], ['light', 'Light']], store.get('theme', 'system'), (v) => applyTheme(v)),
-    switchRow('Sounds', 'Join, leave and message chimes', store.get('sounds', true), (v) => store.set('sounds', v))));
+    switchRow('Sounds', 'Join, leave and message chimes', store.get('sounds', true), (v) => store.set('sounds', v)),
+    'Notification' in window ? switchRow('Desktop notifications', 'When the tab is hidden. Never includes message text', store.get('notify', false) && Notification.permission === 'granted', async (v) => { const ok = await app.enableNotifications(v); if (ok !== v) app.refreshSettings?.(); }) : null));
   return root;
 }

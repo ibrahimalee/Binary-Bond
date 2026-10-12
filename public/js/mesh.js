@@ -113,6 +113,7 @@ export class Peer extends Emitter {
     const s = this.pc.connectionState;
     this.emit('state', s);
     clearTimeout(this.#restartTimer);
+    if (s === 'connected' && this.sendVideo === false) this.setSendVideo(false);
     if (s === 'failed') this.pc.restartIce();
     else if (s === 'disconnected') this.#restartTimer = setTimeout(() => { if (this.pc.connectionState === 'disconnected') this.pc.restartIce(); }, 4000);
   }
@@ -130,6 +131,18 @@ export class Peer extends Emitter {
     if (!p.encodings?.length) p.encodings = [{}];
     p.encodings[0].maxBitrate = kbps * 1000;
     try { await sender.setParameters(p); } catch { /* not yet negotiated */ }
+  }
+
+  // Pauses/resumes our outgoing video to this one peer only (their data saver),
+  // without touching what everyone else receives.
+  async setSendVideo(on) {
+    this.sendVideo = on;
+    const sender = this.videoTx?.sender;
+    if (!sender) return;
+    const p = sender.getParameters();
+    if (!p.encodings?.length) return;
+    p.encodings[0].active = on;
+    try { await sender.setParameters(p); } catch { /* not yet negotiated; applied on next call */ }
   }
 
   send(obj) {
