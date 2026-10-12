@@ -84,6 +84,12 @@ Before going live:
 
 Meetings are kept in memory, so a meeting has to stay on one server instance. To run several instances, route by the `s` query parameter on the WebSocket URL, for example with Caddy's `lb_policy query s`. Serverless platforms such as Vercel can't host the WebSocket server.
 
+## Search engines
+
+Public pages include canonical URLs, Open Graph and Twitter cards, and JSON-LD structured data (Organization, SoftwareApplication, FAQPage, BreadcrumbList). `/robots.txt` and `/sitemap.xml` are generated automatically. Set `PUBLIC_URL` to your real address (for example `https://meet.example.com`) so those links are correct. Meeting rooms, the dashboard and the admin console are marked `noindex`.
+
+Titles and descriptions live in each page's own `<head>`; the FAQ structured data is read from the `<details>` blocks on the page, so editing the page updates both.
+
 ## Plans
 
 Plan limits live in `server/plans.js` and can be overridden with `BB_PLANS`. Prices shown on `/pricing` are placeholders; edit `public/pricing.html` and set the matching Stripe price IDs (`STRIPE_PRICE_PRO`, `STRIPE_PRICE_BUSINESS`).
@@ -128,4 +134,4 @@ tests/           server, crypto and QR tests
 
 Please report security issues privately to the maintainer.
 
-Built by Ibrahemeogoblin. MIT License.
+Built by Ibrahemeogoblin. MIT License. Home page photo by Vitaly Gariev on [Unsplash](https://unsplash.com/photos/UHfJI_lZoPo).
