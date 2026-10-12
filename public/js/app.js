@@ -38,6 +38,7 @@ class App {
     this.tiles = new Map();
     this.meters = new Map();
     this.knocks = new Map();
+    this.earlySignals = new Map();
     this.view = 'home';
     this.unread = 0;
     this.layout = 'auto';
@@ -181,6 +182,7 @@ class App {
     $('#lobbyTitle').textContent = creator ? 'Your private room is ready' : 'Ready to join?';
     $('#lobbySub').textContent = creator ? 'Check your camera and mic, then invite people with the link below.' : 'Your camera and mic stay on this device until you join.';
     $('#joinBtn').textContent = creator ? 'Start call' : 'Join now';
+    $('#joinBtn').classList.remove('loading');
     $('#lobbyInvite').hidden = false;
     $('#lobbyLink').value = this.inviteLink();
     $('#nameInput').value = this.me.name;
@@ -276,21 +278,21 @@ class App {
   // ===========================================================================
   async join() {
     const btn = $('#joinBtn');
-    if (btn.classList.contains('loading')) return;
+    if (btn.classList.contains('loading') || this.view !== 'lobby' || !this.derived || this.sig) return;
     this.me.name = cleanName($('#nameInput').value || 'Anonymous');
     store.set('name', $('#nameInput').value.trim());
     audioContext();
     btn.classList.add('loading');
-    const opts = this.creator ? {
-      wait: $('#optWait').checked, maxPeers: Number($('#optMax').value) || undefined, relay: $('#optRelay').checked,
-    } : {};
-    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    this.sig = new Signaling({
-      url: `${proto}//${location.host}/ws?s=${this.derived.roomId.slice(0, 8)}`, room: this.derived.roomId, auth: this.derived.auth, key: this.derived.key,
-      token: this.token, opts, hello: { name: this.me.name },
-    });
-    this.#wireSignaling(this.sig);
     try {
+      const opts = this.creator ? {
+        wait: $('#optWait').checked, maxPeers: Number($('#optMax').value) || undefined, relay: $('#optRelay').checked,
+      } : {};
+      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      this.sig = new Signaling({
+        url: `${proto}//${location.host}/ws?s=${this.derived.roomId.slice(0, 8)}`, room: this.derived.roomId, auth: this.derived.auth, key: this.derived.key,
+        token: this.token, opts, hello: { name: this.me.name },
+      });
+      this.#wireSignaling(this.sig);
       await this.sig.connect();
     } catch (e) {
       if (!['kicked', 'rejected', 'timeout'].includes(e.reason) && this.view !== 'ended') toast(DENY_TEXT[e.reason] || 'Could not join the room.', { type: 'error', timeout: 6000 });
@@ -338,7 +340,14 @@ class App {
       this.#refreshPeopleUi();
     });
     sig.on('expiring', (m) => toast(`This room closes in ${Math.round((m.at - Date.now()) / 60000)} minutes.`, { type: 'warn', timeout: 8000 }));
-    sig.on('signal', (from, data) => this.peers.get(from)?.handleSignal(data));
+    sig.on('signal', (from, data) => {
+      const p = this.peers.get(from);
+      if (p) return p.handleSignal(data);
+      const q = this.earlySignals.get(from) || [];
+      if (q.length < 100) q.push(data);
+      this.earlySignals.set(from, q);
+      setTimeout(() => this.earlySignals.delete(from), 5000);
+    });
     sig.on('tamper', () => { if (!this.tamperWarned) { this.tamperWarned = true; toast('A signaling message failed authentication and was dropped.', { type: 'error', timeout: 8000 }); } });
     sig.on('denied', (reason) => {
       if (this.view === 'call' || this.view === 'waiting') this.#ended(DENY_TEXT[reason] || 'You were disconnected.', reason === 'kicked' ? 'Removed from the call' : 'Couldn\'t join');
@@ -397,6 +406,8 @@ class App {
     peer.on('track', () => this.#attachRemote(id));
     peer.on('state', () => this.#updateTile(id));
     this.peers.set(id, peer);
+    for (const s of this.earlySignals.get(id) || []) peer.handleSignal(s);
+    this.earlySignals.delete(id);
     this.#createTile(id, false);
     this.#attachRemote(id);
     this.#afterPeersChanged();

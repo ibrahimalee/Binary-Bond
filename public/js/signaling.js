@@ -13,6 +13,10 @@ export class Signaling extends Emitter {
     this.closed = false;
     this.attempt = 0;
     this.joinedOnce = false;
+    // Decryption is async; these chains keep messages in wire order both ways,
+    // so an offer can never overtake the peer-joined that precedes it.
+    this.inbox = Promise.resolve();
+    this.outbox = Promise.resolve();
   }
 
   async connect() {
@@ -30,12 +34,14 @@ export class Signaling extends Emitter {
         if (!this.joinedOnce) msg.opts = this.opts;
         ws.send(JSON.stringify(msg));
       };
-      ws.onmessage = async (ev) => {
-        let msg;
-        try { msg = JSON.parse(ev.data); } catch { return; }
-        await this.#dispatch(msg);
-        if (msg.t === 'joined' || msg.t === 'waiting') settle(resolve, msg);
-        if (msg.t === 'denied' || msg.t === 'ended') settle(reject, Object.assign(new Error(msg.reason), { reason: msg.reason }));
+      ws.onmessage = (ev) => {
+        this.inbox = this.inbox.then(async () => {
+          let msg;
+          try { msg = JSON.parse(ev.data); } catch { return; }
+          await this.#dispatch(msg);
+          if (msg.t === 'joined' || msg.t === 'waiting') settle(resolve, msg);
+          if (msg.t === 'denied' || msg.t === 'ended') settle(reject, Object.assign(new Error(msg.reason), { reason: msg.reason }));
+        }).catch((e) => console.warn('signaling dispatch failed', e));
       };
       ws.onerror = () => settle(reject, Object.assign(new Error('network'), { reason: 'network' }));
       ws.onclose = () => {
@@ -93,9 +99,11 @@ export class Signaling extends Emitter {
 
   #send(obj) { if (this.ws?.readyState === WebSocket.OPEN) { this.ws.send(JSON.stringify(obj)); return true; } return false; }
 
-  async signal(to, data) {
-    const ct = await seal(this.key, data, `${this.peer}|${to}`);
-    return this.#send({ t: 'relay', to, ct });
+  signal(to, data) {
+    const from = this.peer;
+    const job = this.outbox.then(async () => this.#send({ t: 'relay', to, ct: await seal(this.key, data, `${from}|${to}`) }));
+    this.outbox = job.catch(() => false);
+    return job;
   }
 
   admit(peer, ok) { this.#send({ t: 'admit', peer, ok }); }

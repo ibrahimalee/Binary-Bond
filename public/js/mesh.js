@@ -25,6 +25,8 @@ export class Peer extends Emitter {
     this.file = null;
     this.lastBytes = null;
     this.closed = false;
+    this.queue = Promise.resolve();
+    this.pendingIce = [];
 
     this.pc = new RTCPeerConnection({ iceServers, iceTransportPolicy: forceRelay ? 'relay' : 'all', bundlePolicy: 'max-bundle' });
     this.pc.ontrack = (e) => {
@@ -73,7 +75,14 @@ export class Peer extends Emitter {
     }
   }
 
-  async handleSignal(msg) {
+  // Signals are applied strictly one at a time: setRemoteDescription is async and
+  // candidates must never race ahead of the description they belong to.
+  handleSignal(msg) {
+    this.queue = this.queue.then(() => this.#handle(msg));
+    return this.queue;
+  }
+
+  async #handle(msg) {
     if (this.closed || !msg || typeof msg !== 'object') return;
     try {
       if (msg.k === 'sdp' && msg.d && typeof msg.d.sdp === 'string') {
@@ -82,6 +91,7 @@ export class Peer extends Emitter {
         this.ignoreOffer = !this.polite && collision;
         if (this.ignoreOffer) return;
         await this.pc.setRemoteDescription(desc);
+        for (const c of this.pendingIce.splice(0)) await this.pc.addIceCandidate(c).catch(() => {});
         if (desc.type === 'offer') {
           if (!this.audioTx) this.#adoptTransceivers();
           await this.pc.setLocalDescription();
@@ -89,6 +99,7 @@ export class Peer extends Emitter {
         }
         this.emit('described');
       } else if (msg.k === 'ice' && msg.c) {
+        if (!this.pc.remoteDescription) { if (this.pendingIce.length < 200) this.pendingIce.push(msg.c); return; }
         try { await this.pc.addIceCandidate(msg.c); } catch (e) { if (!this.ignoreOffer) throw e; }
       }
     } catch (e) {
