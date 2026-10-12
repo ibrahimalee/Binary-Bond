@@ -62,7 +62,9 @@ function createServer(options = {}) {
 
   // ---- security headers -----------------------------------------------------
   app.use((req, res, next) => {
-    const host = req.get('host') || '';
+    // Host is reflected into CSP, so only accept plain host[:port] characters.
+    const rawHost = req.get('host') || '';
+    const host = /^[A-Za-z0-9.\-[\]:]{1,255}$/.test(rawHost) ? rawHost : 'invalid.local';
     const isEmbed = req.path === '/embed' || req.path === '/embed.html';
     const ancestors = isEmbed ? ["'self'", ...tenants.allowedEmbedOrigins()].join(' ') : "'none'";
     res.set({

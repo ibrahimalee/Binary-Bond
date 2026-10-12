@@ -10,6 +10,7 @@ const CHUNK = 64 * 1024;
 const HIGH_WATER = 8 * 1024 * 1024;
 export const MAX_FILE = 2 * 1024 * 1024 * 1024;
 const HASH_LIMIT = 512 * 1024 * 1024;
+const SAFE_INLINE = /^image\/(png|jpeg|gif|webp)$/;
 
 export async function stripMetadata(file) {
   if (!/^image\/(jpeg|png|webp)$/.test(file.type) || typeof createImageBitmap !== 'function') return { file, stripped: false };
@@ -122,7 +123,10 @@ export class Transfers extends Emitter {
       } else if (m.type === 'end') {
         this.#active.delete(peer);
         this.incoming.delete(key);
-        const blob = new Blob(t.chunks, { type: t.meta.mime || 'application/octet-stream' });
+        // Only known-safe image types keep their MIME type. Anything else is an opaque
+        // download, so a hostile 'text/html' file can never render in our origin.
+        const safeType = SAFE_INLINE.test(t.meta.mime) ? t.meta.mime : 'application/octet-stream';
+        const blob = new Blob(t.chunks, { type: safeType });
         t.chunks = [];
         let verified = null;
         if (t.expectedHash) verified = (await sha256Hex(await blob.arrayBuffer())) === t.expectedHash;
