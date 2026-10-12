@@ -61,6 +61,7 @@ curl -X POST https://YOUR_HOST/v1/sessions \
         <tr><td><code>maxPeers</code></td><td>int</td><td>Room capacity, 2 – your plan's maximum.</td></tr>
         <tr><td><code>maxMinutes</code></td><td>int</td><td>Room time limit, capped by your plan.</td></tr>
         <tr><td><code>relay</code></td><td>bool</td><td>Force TURN relaying so participants never see each other's IP (plan + server support required).</td></tr>
+        <tr><td><code>ref</code></td><td>string</td><td>Your own identifier (1–64 of <code>A-Z a-z 0-9 _ . : / -</code>), echoed as <code>data.ref</code> in every webhook and in <code>/v1/rooms</code>.</td></tr>
       </tbody>
     </table>
 
@@ -95,7 +96,7 @@ curl -X POST https://YOUR_HOST/v1/sessions \
   "id": "evt_9f2c…",
   "type": "room.ended",
   "created": 1760000000000,
-  "data": { "room": "4be1c0a96f3d2e18", "reason": "empty", "peakPeers": 3, "durationSec": 1820 }
+  "data": { "room": "4be1c0a96f3d2e18", "ref": "meeting:42", "reason": "empty", "peakPeers": 3, "durationSec": 1820 }
 }</code></pre>
     <p><code>data.room</code> is a one-way reference: it identifies the room in your logs but can't be used to join. Verify every request using the <code>X-BinaryBond-Signature</code> header:</p>
     <pre class="code"><code>// Node.js
@@ -106,7 +107,7 @@ const ok = crypto.timingSafeEqual(Buffer.from(v1), Buffer.from(expected))
     <p>Failed deliveries are retried three times with exponential backoff. Endpoints that resolve to private or loopback addresses are refused.</p>
 
     <h2 id="api">REST API</h2>
-    <p>Authenticate with <code>Authorization: Bearer &lt;api key&gt;</code>. All bodies are JSON.</p>
+    <p>Authenticate with <code>Authorization: Bearer &lt;api key&gt;</code>. All bodies are JSON. A machine-readable <a href="/openapi.json">OpenAPI 3.1 spec</a> is available for code generators and API clients.</p>
     <table>
       <tbody>
         <tr><td><span class="method post">POST</span><span class="endpoint">/v1/sessions</span></td><td>Mint a session token (see above).</td></tr>

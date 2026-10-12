@@ -13,6 +13,7 @@ import { qrSvg } from './qr.js';
 import { Board } from './board.js';
 import { Recorder } from './recorder.js';
 import { Captions } from './captions.js';
+import { runNetworkCheck } from './netcheck.js';
 
 const REACTIONS = ['👍', '👏', '😂', '❤️', '🎉', '😮', '🤔', '👋'];
 const DENY_TEXT = {
@@ -206,6 +207,13 @@ class App {
     $('#joinBtn').addEventListener('click', () => this.join());
     $('#lobbyCopy').addEventListener('click', () => copyText(this.inviteLink(), 'Invite link copied'));
     $('#lobbyQr').addEventListener('click', () => this.inviteModal());
+    $('#netCheckBtn').addEventListener('click', async () => {
+      const body = h('div.check-wait', h('span.spinner'), 'Testing signaling, NAT traversal and devices…');
+      const dlg = modal({ title: 'Connection check', body });
+      const result = await runNetworkCheck({ stun: this.cfg?.stun, media: this.media });
+      body.replaceWith(result);
+      void dlg;
+    });
     for (const c of $$('[data-vfx]')) c.addEventListener('click', () => this.setVideoFx(c.dataset.vfx));
     for (const c of $$('[data-afx]')) c.addEventListener('click', () => this.setVoiceFx(c.dataset.afx));
     $('#cancelWaitBtn').addEventListener('click', () => { this.teardown(); this.showView('lobby'); this.#refreshLobby(); });
@@ -278,7 +286,7 @@ class App {
     } : {};
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
     this.sig = new Signaling({
-      url: `${proto}//${location.host}/ws`, room: this.derived.roomId, auth: this.derived.auth, key: this.derived.key,
+      url: `${proto}//${location.host}/ws?s=${this.derived.roomId.slice(0, 8)}`, room: this.derived.roomId, auth: this.derived.auth, key: this.derived.key,
       token: this.token, opts, hello: { name: this.me.name },
     });
     this.#wireSignaling(this.sig);

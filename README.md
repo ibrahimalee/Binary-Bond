@@ -55,7 +55,7 @@ Open UDP 3478, TCP 5349, UDP 49160-49999 and TCP 80/443 on the host.
 - `BB_TRUST_PROXY` matches the number of proxies in front of the app (the rate limits depend on it).
 - `/data` is on a persistent volume (workspaces and usage aggregates).
 
-> **Scaling note:** rooms live in process memory, so run one instance per deployment, or pin each room to one instance at the load balancer. Serverless platforms such as Vercel can't host the WebSocket signaling server.
+> **Scaling:** rooms live in process memory. Clients connect to `/ws?s=<shard>` (a prefix of the room ID), so you can run several instances and pin each room to one of them with a query-hash load-balancing policy, e.g. in Caddy: `reverse_proxy app1:3000 app2:3000 { lb_policy query s }`. Workspaces live in `BB_DATA_DIR`, so keep the control plane (dashboard/admin/API) on one instance or a shared volume. Serverless platforms such as Vercel can't host the WebSocket signaling server.
 
 ## SaaS mode
 

@@ -27,7 +27,8 @@ test('tenant + session token + metering flow', async (t) => {
   assert.equal(me.json.tenant.id, tenant.id);
   assert.equal(me.json.tenant.keyHash, undefined, 'key hash must never be exposed');
 
-  const s = await api(bb, 'POST', '/v1/sessions', { token: apiKey, body: { maxPeers: 3, ttlSec: 120 } });
+  assert.equal((await api(bb, 'POST', '/v1/sessions', { token: apiKey, body: { ref: 'bad ref!' } })).status, 400);
+  const s = await api(bb, 'POST', '/v1/sessions', { token: apiKey, body: { maxPeers: 3, ttlSec: 120, ref: 'meeting:42' } });
   assert.equal(s.status, 201);
   assert.match(s.json.embedUrl, /\/embed\?token=v1\./);
 
@@ -40,9 +41,11 @@ test('tenant + session token + metering flow', async (t) => {
   assert.equal(j.plan, 'pro');
   const rooms = await api(bb, 'GET', '/v1/rooms', { token: apiKey });
   assert.equal(rooms.json.rooms.length, 1);
+  assert.equal(rooms.json.rooms[0].ref, 'meeting:42');
   await a.close();
   await new Promise(r => setTimeout(r, 50));
   assert.deepEqual(events.map(e => e.type), ['room.created', 'participant.joined', 'participant.left', 'room.ended']);
+  assert.ok(events.every(e => e.data.ref === 'meeting:42'), 'every webhook carries the customer ref');
   const usage = await api(bb, 'GET', '/v1/usage?days=7', { token: apiKey });
   assert.equal(usage.json.days.length, 7);
   assert.equal(usage.json.days.at(-1).rooms, 1);

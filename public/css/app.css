@@ -639,3 +639,16 @@ body.embed .topnav { position: absolute; left: 0; right: 0; background: transpar
 .cc-line { justify-self: center; max-width: 100%; padding: 8px 14px; border-radius: 12px; background: rgba(5, 6, 12, .82); color: #fff; font-size: clamp(14px, 1.6vw, 18px); line-height: 1.4; backdrop-filter: blur(8px); box-shadow: var(--shadow-1); animation: viewIn .2s var(--ease); }
 .cc-line b { margin-right: 8px; font-weight: 700; }
 .cc-line.interim span { opacity: .8; }
+
+/* ---------- network check ---------- */
+.check-link { margin-top: 14px; }
+.check-wait { display: flex; gap: 12px; align-items: center; color: var(--muted); padding: 10px 0; }
+.spinner { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border-strong); border-top-color: var(--accent); animation: spin .8s linear infinite; flex: none; }
+.check-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.check-list li { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface); }
+.check-list li > .ic { width: 22px; height: 22px; padding: 3px; border-radius: 50%; flex: none; }
+.check-list li.ok > .ic { color: var(--ok); background: var(--ok-soft); }
+.check-list li.bad > .ic { color: var(--danger); background: var(--danger-soft); }
+.check-list li.warn > .ic { color: var(--warn); background: var(--warn-soft); }
+.check-list strong { display: block; font-size: 14px; }
+.check-list small { color: var(--muted); font-size: 12.5px; }

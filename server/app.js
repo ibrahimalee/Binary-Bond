@@ -84,7 +84,7 @@ function createServer(options = {}) {
         : 'camera=(self), microphone=(self), display-capture=(self), fullscreen=(self), geolocation=(), payment=(), usb=(), interest-cohort=()',
     });
     // The SDK is meant to be loaded by customer sites.
-    if (req.path === '/sdk.js') res.set({ 'Cross-Origin-Resource-Policy': 'cross-origin', 'Access-Control-Allow-Origin': '*' });
+    if (req.path === '/sdk.js' || req.path === '/openapi.json') res.set({ 'Cross-Origin-Resource-Policy': 'cross-origin', 'Access-Control-Allow-Origin': '*' });
     if (req.secure) res.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
     if (!isEmbed) res.set('X-Frame-Options', 'DENY');
     next();
@@ -134,7 +134,7 @@ function createServer(options = {}) {
 
   app.get('/api/config', (req, res) => {
     res.set('Cache-Control', 'no-store').json({
-      name: config.brandName, version: VERSION, turn: hasTurn(config),
+      name: config.brandName, version: VERSION, turn: hasTurn(config), stun: config.stunUrls,
       signup: config.openSignup, billing: billing.enabled,
       plans: Object.fromEntries(Object.entries(plans).map(([k, p]) => [k, {
         label: p.label, maxPeers: p.maxPeers, maxMinutes: p.maxMinutes, monthlyPeerMinutes: p.monthlyPeerMinutes,
@@ -176,7 +176,7 @@ function createServer(options = {}) {
   v1.post('/sessions', (req, res) => {
     const b = req.body || {};
     const { token, expiresAt } = tenants.issueToken(req.tenant, {
-      ttlSec: b.ttlSec, maxPeers: b.maxPeers, maxMinutes: b.maxMinutes, relay: b.relay, name: b.name,
+      ttlSec: b.ttlSec, maxPeers: b.maxPeers, maxMinutes: b.maxMinutes, relay: b.relay, name: b.name, ref: b.ref,
     });
     const url = new URL('/embed', baseUrl(req));
     url.searchParams.set('token', token);

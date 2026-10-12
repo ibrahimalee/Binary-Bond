@@ -101,7 +101,7 @@ function render(meRes, usage, rooms, freshKey) {
   root.replaceChildren(
     h('header.console-head',
       h('div', h('h1', me.name), h('p.muted', `Workspace ${me.id} · ${plan.label} plan · since ${fmtDate(me.createdAt)}`)),
-      h('div.btn-row', h('a.btn.btn-ghost', { href: '/docs' }, icon('code'), 'API docs'), h('a.btn.btn-primary', { href: '/', target: '_blank', rel: 'noopener' }, icon('sparkle'), 'Open app'))),
+      h('div.btn-row', h('a.btn.btn-ghost', { href: '/openapi.json', target: '_blank', rel: 'noopener' }, icon('code'), 'OpenAPI'), h('a.btn.btn-ghost', { href: '/docs' }, icon('note'), 'Docs'), h('a.btn.btn-primary', { href: '/', target: '_blank', rel: 'noopener' }, icon('sparkle'), 'Open app'))),
     freshKey ? revealSecret('Your API key — copy it now', freshKey, 'It is shown only once. We store only a hash of it.') : '',
     h('section.cards',
       stat('Live rooms', fmtNum(rooms.length), `${fmtNum(rooms.reduce((s, r) => s + r.peers, 0))} people connected`, 'span-3'),
@@ -145,7 +145,18 @@ function usageChart(days) {
     valueOf: (d) => (metric === 'minutes' ? d.peerSeconds / 60 : metric === 'rooms' ? d.rooms : d.peakPeers),
   }));
   draw();
-  return [h('div.card-head', h('div', h('h2', icon('activity'), 'Usage'), h('p.muted', 'Last 30 days. Only aggregate counters are kept: no room IDs, IPs or names.')), seg), host];
+  const csv = h('button.btn.btn-ghost.btn-sm', { type: 'button', onclick: exportCsv }, icon('download'), 'CSV');
+  return [h('div.card-head', h('div', h('h2', icon('activity'), 'Usage'), h('p.muted', 'Last 30 days. Only aggregate counters are kept: no room IDs, IPs or names.')), h('div.btn-row', seg, csv)), host];
+}
+
+async function exportCsv() {
+  try {
+    const { days } = await api('/v1/usage?days=365', { token: key });
+    const rows = [['date', 'rooms', 'participant_minutes', 'peak_participants', 'joins'], ...days.map(d => [d.date, d.rooms, (d.peerSeconds / 60).toFixed(1), d.peakPeers, d.joins])];
+    const a = h('a', { href: URL.createObjectURL(new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv' })), download: `binarybond-usage-${me.id}.csv` });
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  } catch (e) { toast(e.message, { type: 'error' }); }
 }
 
 function plansCard() {

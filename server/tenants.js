@@ -136,6 +136,10 @@ class TenantService {
     if (opts.maxMinutes) payload.maxMinutes = Math.floor(opts.maxMinutes);
     if (opts.relay) payload.relay = true;
     if (opts.name) payload.n = String(opts.name).slice(0, 60);
+    if (opts.ref !== undefined) {
+      if (typeof opts.ref !== 'string' || !/^[\w.:/-]{1,64}$/.test(opts.ref)) throw httpError(400, 'ref must be 1-64 chars of [A-Za-z0-9_.:/-]');
+      payload.ref = opts.ref;
+    }
     const body = b64u(JSON.stringify(payload));
     return { token: `v1.${body}.${this._sig(body)}`, expiresAt: payload.exp * 1000 };
   }

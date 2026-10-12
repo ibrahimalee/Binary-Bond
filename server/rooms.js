@@ -102,14 +102,14 @@ class RoomManager {
       id: msg.room, ref: roomRef(msg.room), authHash: hashAuth(msg.auth),
       peers: new Map(), waiting: new Map(), host: null,
       locked: false, wait: opts.wait === true, relay,
-      tenantId: tid, plan: planName, maxPeers,
+      tenantId: tid, plan: planName, maxPeers, externalRef: typeof claims.ref === 'string' ? claims.ref : null,
       createdAt: now, expiresAt: now + maxMinutes * 60000, peak: 0, timers: [],
     };
     this._schedule(room);
     this.rooms.set(room.id, room);
     this.stats.roomsCreated++;
     this.usage?.roomCreated(tid);
-    if (tenant) this.webhooks?.emit(tenant, 'room.created', { room: room.ref, maxPeers, expiresAt: room.expiresAt });
+    if (tenant) this.webhooks?.emit(tenant, 'room.created', { room: room.ref, ref: room.externalRef, maxPeers, expiresAt: room.expiresAt });
     this._admitInto(room, conn, this._newPeerId(), hello);
   }
 
@@ -189,7 +189,7 @@ class RoomManager {
   activeForTenant(tid) {
     const out = [];
     for (const r of this.rooms.values()) {
-      if (r.tenantId === tid) out.push({ room: r.ref, peers: r.peers.size, createdAt: r.createdAt, expiresAt: r.expiresAt });
+      if (r.tenantId === tid) out.push({ room: r.ref, ref: r.externalRef, peers: r.peers.size, createdAt: r.createdAt, expiresAt: r.expiresAt });
     }
     return out;
   }
@@ -271,7 +271,7 @@ class RoomManager {
   _tenantEvent(room, type, data) {
     if (room.tenantId === PUBLIC_TENANT || !this.webhooks || !this.tenants) return;
     const tenant = this.tenants.get(room.tenantId);
-    if (tenant) this.webhooks.emit(tenant, type, { room: room.ref, ...data });
+    if (tenant) this.webhooks.emit(tenant, type, { room: room.ref, ref: room.externalRef, ...data });
   }
 
   _memberRoom(conn) {

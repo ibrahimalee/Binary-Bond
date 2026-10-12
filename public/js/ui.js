@@ -28,7 +28,7 @@ export function modal({ title, body, actions = [], wide = false, onClose = null,
   const foot = actions.length ? h('footer.modal-foot', actions.map(a => h(`button.btn.${a.kind || 'btn-ghost'}`, {
     type: 'button', onclick: async () => { const keep = await a.run?.(); if (keep !== true) close(); },
   }, a.icon ? icon(a.icon) : null, a.label))) : null;
-  dlg.append(head, h('div.modal-body', body), foot);
+  dlg.append(...[head, h('div.modal-body', body), foot].filter(Boolean));
   dlg.addEventListener('cancel', (e) => { e.preventDefault(); close(); });
   dlg.addEventListener('click', (e) => { if (e.target === dlg) close(); });
   document.body.append(dlg);
