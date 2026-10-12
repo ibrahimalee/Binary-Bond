@@ -10,17 +10,25 @@ module.exports = async (req, res) => {
         return;
     }
 
+    if (!['GET', 'POST'].includes(req.method)) {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+    }
+
     try {
         const code = req.method === 'GET' 
             ? req.query.code 
             : req.body?.code;
+        const senderId = req.method === 'GET'
+            ? req.query.senderId
+            : req.body?.senderId;
 
-        if (!code) {
-            res.status(400).json({ error: 'Missing code' });
+        if (!code || !senderId) {
+            res.status(400).json({ error: 'Missing code or sender ID' });
             return;
         }
 
-        const candidates = getIceCandidates(code);
+        const candidates = getIceCandidates(code, senderId);
         
         res.status(200).json(candidates);
     } catch (error) {

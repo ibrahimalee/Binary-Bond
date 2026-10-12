@@ -10,6 +10,11 @@ module.exports = async (req, res) => {
         return;
     }
 
+    if (!['GET', 'POST'].includes(req.method)) {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
+    }
+
     try {
         const code = req.method === 'GET' 
             ? req.query.code 

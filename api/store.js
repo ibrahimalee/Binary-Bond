@@ -3,13 +3,22 @@
 // For production scale, consider using Vercel KV or another database
 
 const rooms = new Map();
+const ROOM_CODE_PATTERN = /^[A-Z0-9]{6,8}$/;
+const MAX_ICE_CANDIDATES_PER_ROOM = 200;
 
 function getRoom(code) {
-    return rooms.get(code.toUpperCase()) || null;
+    cleanupOldRooms();
+    if (typeof code !== 'string') return null;
+    const roomCode = code.trim().toUpperCase();
+    if (!ROOM_CODE_PATTERN.test(roomCode)) return null;
+    return rooms.get(roomCode) || null;
 }
 
 function createRoom(code) {
-    const roomCode = code.toUpperCase();
+    cleanupOldRooms();
+    if (typeof code !== 'string') return null;
+    const roomCode = code.trim().toUpperCase();
+    if (!ROOM_CODE_PATTERN.test(roomCode)) return null;
     if (rooms.has(roomCode)) {
         return null; // Room already exists
     }
@@ -50,20 +59,22 @@ function getAnswer(code) {
     return room?.answer || null;
 }
 
-function addIceCandidate(code, candidate) {
+function addIceCandidate(code, candidate, senderId) {
     const room = getRoom(code);
-    if (!room) return false;
-    room.iceCandidates.push(candidate);
+    if (!room || typeof senderId !== 'string' || senderId.length > 128) return false;
+    if (room.iceCandidates.length >= MAX_ICE_CANDIDATES_PER_ROOM) return false;
+    room.iceCandidates.push({ candidate, senderId });
     return true;
 }
 
-function getIceCandidates(code) {
+function getIceCandidates(code, excludeSenderId) {
     const room = getRoom(code);
-    return room?.iceCandidates || [];
+    if (!room) return [];
+    return room.iceCandidates.filter(item => item.senderId !== excludeSenderId);
 }
 
 function clearRoom(code) {
-    rooms.delete(code.toUpperCase());
+    if (typeof code === 'string') rooms.delete(code.trim().toUpperCase());
 }
 
 // Clean up old rooms (older than 1 hour)
@@ -77,8 +88,9 @@ function cleanupOldRooms() {
     }
 }
 
-// Cleanup is called on each request to prevent memory leaks
-// In production, consider using Vercel KV or another persistent store
+// getRoom and createRoom trigger cleanup so every active endpoint reclaims
+// expired rooms. In production, use durable shared storage for multi-instance
+// deployments.
 
 module.exports = {
     getRoom,
@@ -89,6 +101,7 @@ module.exports = {
     getAnswer,
     addIceCandidate,
     getIceCandidates,
-    clearRoom
+    clearRoom,
+    cleanupOldRooms
 };
 

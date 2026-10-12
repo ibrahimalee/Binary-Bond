@@ -19,7 +19,10 @@ class BinaryBond {
         this.hasRemoteOffer = false;
         this.hasRemoteAnswer = false;
         this.receivedIceSignatures = new Set();
+        this.queuedIceSignatures = new Set();
+        this.pendingIceCandidates = [];
         this.inCallView = false;
+        this.clientId = crypto.randomUUID();
         
         this.init();
     }
@@ -120,16 +123,31 @@ class BinaryBond {
     async checkForIce() {
         if (!this.roomCode || !this.pc) return;
         try {
-            const response = await this.apiCall('getIce', 'GET', { code: this.roomCode });
+            const response = await this.apiCall('getIce', 'GET', {
+                code: this.roomCode,
+                senderId: this.clientId
+            });
             const candidates = Array.isArray(response)
                 ? response
                 : (Array.isArray(response?.candidates) ? response.candidates : []);
 
             for (const candidate of candidates) {
-                const signature = JSON.stringify(candidate);
-                if (this.receivedIceSignatures.has(signature)) continue;
-                this.receivedIceSignatures.add(signature);
-                await this.handleIceCandidate(candidate);
+                const iceCandidate = candidate.candidate || candidate;
+                const signature = JSON.stringify(iceCandidate);
+                if (this.receivedIceSignatures.has(signature) || this.queuedIceSignatures.has(signature)) continue;
+
+                // Trickle ICE is allowed to arrive before the offer/answer.
+                // Keep it until setRemoteDescription completes rather than
+                // treating a transient addIceCandidate failure as consumed.
+                if (!this.pc.remoteDescription) {
+                    this.pendingIceCandidates.push({ candidate: iceCandidate, signature });
+                    this.queuedIceSignatures.add(signature);
+                    continue;
+                }
+
+                if (await this.handleIceCandidate(iceCandidate)) {
+                    this.receivedIceSignatures.add(signature);
+                }
             }
         } catch (error) {
             console.error('Error polling ICE candidates:', error);
@@ -188,12 +206,17 @@ class BinaryBond {
                 this.sendMessage();
             }
         });
+        this.elements.roomCodeInput.addEventListener('input', (event) => {
+            event.target.value = event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        });
         
 
         this.renderRecentRooms();
     }
 
     async createRoom() {
+        if (this.elements.createRoomBtn.disabled) return;
+        this.setConnectionControls(true);
         try {
             this.isCreator = true;
             const response = await this.apiCall('createRoom', 'POST');
@@ -210,6 +233,7 @@ class BinaryBond {
         } catch (error) {
             console.error('Error creating room:', error);
             alert('Unable to create room right now. Please try again.');
+            this.setConnectionControls(false);
         }
     }
 
@@ -220,6 +244,12 @@ class BinaryBond {
             return;
         }
 
+        if (!/^[A-Z0-9]{6,8}$/.test(roomCode)) {
+            alert('Enter a valid 6 to 8 character room code.');
+            return;
+        }
+
+        this.setConnectionControls(true);
         this.roomCode = roomCode;
         this.isCreator = false;
 
@@ -230,6 +260,7 @@ class BinaryBond {
         } catch (error) {
             console.error('Error joining room:', error);
             alert('Unable to join this room. Please verify the code and try again.');
+            this.setConnectionControls(false);
         }
     }
 
@@ -308,7 +339,8 @@ class BinaryBond {
                 try {
                     await this.apiCall('addIce', 'POST', {
                         code: this.roomCode,
-                        candidate: event.candidate
+                        candidate: event.candidate,
+                        senderId: this.clientId
                     });
                 } catch (error) {
                     console.error('Error sending ICE candidate:', error);
@@ -372,6 +404,7 @@ class BinaryBond {
     async handleOffer(offer) {
         try {
             await this.pc.setRemoteDescription(new RTCSessionDescription(offer));
+            await this.flushPendingIceCandidates();
             const answer = await this.pc.createAnswer();
             await this.pc.setLocalDescription(answer);
 
@@ -389,6 +422,7 @@ class BinaryBond {
     async handleAnswer(answer) {
         try {
             await this.pc.setRemoteDescription(new RTCSessionDescription(answer));
+            await this.flushPendingIceCandidates();
             this.hasRemoteAnswer = true;
             await this.enterCallView();
         } catch (error) {
@@ -398,9 +432,25 @@ class BinaryBond {
 
     async handleIceCandidate(candidate) {
         try {
+            if (!this.pc?.remoteDescription) return false;
             await this.pc.addIceCandidate(new RTCIceCandidate(candidate));
+            return true;
         } catch (error) {
             console.error('Error handling ICE candidate:', error);
+            return false;
+        }
+    }
+
+    async flushPendingIceCandidates() {
+        if (!this.pc?.remoteDescription || this.pendingIceCandidates.length === 0) return;
+
+        const pendingCandidates = this.pendingIceCandidates.splice(0);
+        this.queuedIceSignatures.clear();
+        for (const { candidate, signature } of pendingCandidates) {
+            if (this.receivedIceSignatures.has(signature)) continue;
+            if (await this.handleIceCandidate(candidate)) {
+                this.receivedIceSignatures.add(signature);
+            }
         }
     }
 
@@ -467,6 +517,12 @@ class BinaryBond {
         this.elements.connectionStatus.classList.toggle('connected', status === 'Connected');
     }
 
+    setConnectionControls(disabled) {
+        this.elements.createRoomBtn.disabled = disabled;
+        this.elements.joinRoomBtn.disabled = disabled;
+        this.elements.roomCodeInput.disabled = disabled;
+    }
+
     handlePeerDisconnected() {
         this.updateConnectionStatus('Peer disconnected');
         this.endCall();
@@ -480,6 +536,8 @@ class BinaryBond {
         this.hasRemoteOffer = false;
         this.hasRemoteAnswer = false;
         this.receivedIceSignatures.clear();
+        this.queuedIceSignatures.clear();
+        this.pendingIceCandidates = [];
         this.inCallView = false;
 
         // Clean up media streams
@@ -510,6 +568,7 @@ class BinaryBond {
         this.elements.communicationPanel.style.display = 'none';
         this.elements.roomInfo.style.display = 'none';
         this.elements.roomCodeInput.value = '';
+        this.setConnectionControls(false);
         this.elements.chatMessages.innerHTML = '';
         this.updateConnectionStatus('Disconnected');
         

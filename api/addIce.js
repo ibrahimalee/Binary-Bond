@@ -16,14 +16,14 @@ module.exports = async (req, res) => {
     }
 
     try {
-        const { code, candidate } = req.body;
+        const { code, candidate, senderId } = req.body;
 
-        if (!code || !candidate) {
-            res.status(400).json({ error: 'Missing code or candidate' });
+        if (!code || !candidate || !senderId) {
+            res.status(400).json({ error: 'Missing code, candidate, or sender ID' });
             return;
         }
 
-        const success = addIceCandidate(code, candidate);
+        const success = addIceCandidate(code, candidate, senderId);
         
         if (!success) {
             res.status(404).json({ error: 'Room not found' });
