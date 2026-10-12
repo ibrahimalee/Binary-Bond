@@ -844,7 +844,7 @@ class App {
   #renderUnread() {
     $('#chatBadge').hidden = !this.unread;
     $('#chatBadge').textContent = this.unread > 9 ? '9+' : String(this.unread || '');
-    document.title = this.unread ? `(${this.unread}) BinaryBond` : 'BinaryBond';
+    document.title = this.unread ? `(${this.unread}) Meeting | BinaryBond` : 'Meeting | BinaryBond';
   }
 
   // ===========================================================================
