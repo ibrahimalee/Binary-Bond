@@ -3,6 +3,11 @@
 import { h, icon, $, store } from './util.js';
 import { audioContext } from './media.js';
 
+// ---- reactions (drawn icons, shared by the call and chat) ---------------------
+export const REACTIONS = ['thumbs', 'heart', 'laugh', 'surprised', 'star', 'question'];
+export const REACTION_LABELS = { thumbs: 'Thumbs up', heart: 'Love', laugh: 'Laugh', surprised: 'Wow', star: 'Celebrate', question: 'Question' };
+export const reactionIcon = (name) => icon(name, `react-ic react-${name}`);
+
 // ---- toasts --------------------------------------------------------------------
 export function toast(message, { type = 'info', timeout = 4200, action = null } = {}) {
   let host = $('#toasts');
@@ -111,13 +116,6 @@ export function sound(name) {
   } catch { /* audio unavailable */ }
 }
 
-// ---- theme ---------------------------------------------------------------------------
-export function applyTheme(theme = store.get('theme', 'system')) {
-  const root = document.documentElement;
-  if (theme === 'system') delete root.dataset.theme; else root.dataset.theme = theme;
-  store.set('theme', theme);
-}
-
 export function copyText(text, label = 'Copied to clipboard') {
-  return navigator.clipboard.writeText(text).then(() => toast(label, { type: 'success', timeout: 2000 }), () => toast('Copy failed — select and copy manually', { type: 'warn' }));
+  return navigator.clipboard.writeText(text).then(() => toast(label, { type: 'success', timeout: 2000 }), () => toast('Couldn\'t copy. Select the text and copy it manually.', { type: 'warn' }));
 }

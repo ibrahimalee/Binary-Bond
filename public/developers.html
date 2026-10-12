@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Developers | BinaryBond</title>
+  <meta name="description" content="Embed end-to-end encrypted video calls in your product with the BinaryBond session API, SDK and webhooks.">
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/site.css">
+  <script type="module" src="/js/site.js"></script>
+</head>
+<body>
+  <!--#sprite-->
+  <!--#header-->
+  <main>
+    <section class="page-head">
+      <div class="container">
+        <span class="eyebrow">Developers</span>
+        <h1>Build private calls into your product</h1>
+        <p>A session API on your server, one script tag in the browser. Media and messages never pass through your servers or ours.</p>
+        <div class="btn-row page-head-cta"><a class="btn btn-primary" href="/dashboard">Get an API key</a><a class="btn" href="/openapi.json">OpenAPI spec</a></div>
+      </div>
+    </section>
+
+    <div class="container prose-wrap">
+      <nav class="toc" aria-label="On this page">
+        <strong>On this page</strong>
+        <a href="#quickstart">Quickstart</a>
+        <a href="#sessions">Session tokens</a>
+        <a href="#sdk">Embed SDK</a>
+        <a href="#events">Browser events</a>
+        <a href="#webhooks">Webhooks</a>
+        <a href="#api">REST API</a>
+        <a href="#limits">Limits and errors</a>
+        <a href="#self-host">Self-hosting</a>
+        <a href="#security">Security model</a>
+      </nav>
+
+      <article class="prose">
+        <h2 id="quickstart">Quickstart</h2>
+        <ol>
+          <li>Create a workspace in the <a href="/dashboard">dashboard</a> and copy your API key. Keep it on your server.</li>
+          <li>When a user opens a meeting in your app, request a session token from your backend.</li>
+          <li>Pass the token to the browser and mount the call.</li>
+        </ol>
+<pre><code># Server: create a session token
+curl -X POST https://YOUR_HOST/v1/sessions \
+  -H "Authorization: Bearer $BINARYBOND_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"maxPeers": 4, "ttlSec": 900, "ref": "meeting:42"}'
+
+# Response
+{ "token": "v1.eyJ0aWQ...", "expiresAt": 1760000000000, "embedUrl": "https://YOUR_HOST/embed?token=..." }</code></pre>
+<pre><code>&lt;div id="call"&gt;&lt;/div&gt;
+&lt;script src="https://YOUR_HOST/sdk.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  const call = BinaryBond.mount('#call', { token: SESSION_TOKEN, height: '640px' });
+  // Share call.inviteUrl with the other participants through your app.
+  call.on('joined', (e) =&gt; console.log('participants', e.participants));
+&lt;/script&gt;</code></pre>
+        <div class="note"><svg class="ic"><use href="#i-info"/></svg><p>Add your site under <strong>Allowed embed origins</strong> in the dashboard. Browsers will refuse to show the call inside other sites.</p></div>
+
+        <h2 id="sessions">Session tokens</h2>
+        <p>A session token lets a browser create a meeting under your workspace. It applies your plan limits, counts usage against your quota and enables your branding. People joining an existing meeting only need its link.</p>
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>ttlSec</code></td><td>integer</td><td>Token lifetime, 30 seconds to 24 hours. Default 900.</td></tr>
+            <tr><td><code>maxPeers</code></td><td>integer</td><td>Meeting capacity, from 2 up to your plan's limit.</td></tr>
+            <tr><td><code>maxMinutes</code></td><td>integer</td><td>Meeting time limit, capped by your plan.</td></tr>
+            <tr><td><code>relay</code></td><td>boolean</td><td>Route all media through the relay so participants cannot see each other's IP address.</td></tr>
+            <tr><td><code>ref</code></td><td>string</td><td>Your own identifier, up to 64 characters of <code>A-Z a-z 0-9 _ . : / -</code>. Returned in webhooks and <code>/v1/rooms</code>.</td></tr>
+          </tbody>
+        </table>
+
+        <h2 id="sdk">Embed SDK</h2>
+        <p><code>BinaryBond.mount(target, options)</code> inserts the meeting in an iframe and returns a controller.</p>
+        <table>
+          <thead><tr><th>Option</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>token</code></td><td>Session token from <code>POST /v1/sessions</code>.</td></tr>
+            <tr><td><code>room</code></td><td>An existing meeting key to join. Leave it out to create a new meeting, then read <code>call.room</code>.</td></tr>
+            <tr><td><code>height</code>, <code>radius</code>, <code>title</code></td><td>Iframe presentation.</td></tr>
+            <tr><td><code>origin</code></td><td>BinaryBond host. Defaults to the host that served <code>sdk.js</code>.</td></tr>
+          </tbody>
+        </table>
+        <p>The controller has <code>room</code>, <code>inviteUrl</code>, <code>frame</code>, <code>on(type, fn)</code>, <code>off(type, fn)</code> and <code>destroy()</code>.</p>
+
+        <h2 id="events">Browser events</h2>
+        <table>
+          <thead><tr><th>Event</th><th>Payload</th><th>Fired when</th></tr></thead>
+          <tbody>
+            <tr><td><code>joined</code></td><td><code>{ participants }</code></td><td>The user entered the meeting.</td></tr>
+            <tr><td><code>participants</code></td><td><code>{ participants }</code></td><td>Someone joined or left.</td></tr>
+            <tr><td><code>waiting</code></td><td><code>{}</code></td><td>The user is in the host's waiting room.</td></tr>
+            <tr><td><code>left</code></td><td><code>{}</code></td><td>The meeting ended for the user.</td></tr>
+          </tbody>
+        </table>
+
+        <h2 id="webhooks">Webhooks</h2>
+        <p>Set an endpoint in the dashboard to receive <code>room.created</code>, <code>room.ended</code>, <code>participant.joined</code>, <code>participant.left</code> and <code>quota.warning</code> as JSON <code>POST</code> requests.</p>
+<pre><code>{
+  "id": "evt_9f2c...",
+  "type": "room.ended",
+  "created": 1760000000000,
+  "data": { "room": "4be1c0a96f3d2e18", "ref": "meeting:42", "reason": "empty", "peakPeers": 3, "durationSec": 1820 }
+}</code></pre>
+        <p>Verify each request with the <code>X-BinaryBond-Signature</code> header and reject anything older than five minutes:</p>
+<pre><code>const [t, v1] = header.split(',').map((p) =&gt; p.split('=')[1]);
+const expected = crypto.createHmac('sha256', WEBHOOK_SECRET).update(`${t}.${rawBody}`).digest('hex');
+const valid = crypto.timingSafeEqual(Buffer.from(v1), Buffer.from(expected))
+  &amp;&amp; Math.abs(Date.now() / 1000 - Number(t)) &lt; 300;</code></pre>
+        <p>Failed deliveries are retried three times with backoff. Endpoints on private networks are refused.</p>
+
+        <h2 id="api">REST API</h2>
+        <p>Send <code>Authorization: Bearer &lt;api key&gt;</code> with every request. The full schema is in the <a href="/openapi.json">OpenAPI spec</a>.</p>
+        <table>
+          <tbody>
+            <tr><td><span class="method post">POST</span><span class="endpoint">/v1/sessions</span></td><td>Create a session token.</td></tr>
+            <tr><td><span class="method">GET</span><span class="endpoint">/v1/me</span></td><td>Workspace, plan limits and this month's usage.</td></tr>
+            <tr><td><span class="method patch">PATCH</span><span class="endpoint">/v1/me</span></td><td>Update name, branding, webhook URL and allowed origins.</td></tr>
+            <tr><td><span class="method post">POST</span><span class="endpoint">/v1/me/rotate-key</span></td><td>Issue a new key and revoke the current one.</td></tr>
+            <tr><td><span class="method">GET</span><span class="endpoint">/v1/usage</span></td><td>Daily meetings, participant time and peak size.</td></tr>
+            <tr><td><span class="method">GET</span><span class="endpoint">/v1/rooms</span></td><td>Meetings currently running under your workspace.</td></tr>
+            <tr><td><span class="method post">POST</span><span class="endpoint">/v1/webhook/test</span></td><td>Send a signed test event.</td></tr>
+            <tr><td><span class="method post">POST</span><span class="endpoint">/v1/billing/checkout</span></td><td>Start a plan upgrade through Stripe.</td></tr>
+          </tbody>
+        </table>
+
+        <h2 id="limits">Limits and errors</h2>
+        <p>Errors return a status code and <code>{ "error": "message" }</code>. Requests are rate limited per IP address and return <code>429</code> when exceeded. When your monthly minutes run out, new meetings created with your tokens are refused until the next month or an upgrade.</p>
+
+        <h2 id="self-host">Self-hosting</h2>
+<pre><code>cp .env.example .env     # set DOMAIN, BB_SECRET, BB_ADMIN_TOKEN, BB_TURN_SECRET
+docker compose up -d     # app, automatic HTTPS and a TURN relay</code></pre>
+        <p>The README lists every setting and a production checklist.</p>
+
+        <h2 id="security">Security model</h2>
+        <ul>
+          <li>The meeting key is 128 random bits created in the browser and carried only in the URL fragment.</li>
+          <li>HKDF-SHA-256 derives the public meeting ID, a membership token (the server stores only its hash) and an AES-256-GCM key that never leaves the browser.</li>
+          <li>Handshake messages are sealed with that key and bound to sender and recipient, so the server cannot read, alter or redirect them.</li>
+          <li>Media and data use DTLS-SRTP and DTLS-SCTP between devices, or through a TURN relay that only sees encrypted packets.</li>
+          <li>The server stores workspaces, hashed API keys and daily totals. It never stores meeting IDs, IP addresses, names or content.</li>
+        </ul>
+      </article>
+    </div>
+  </main>
+  <!--#footer-->
+</body>
+</html>

@@ -1,9 +1,9 @@
-/*! BinaryBond embed SDK — drop-in private calls for your product.
+/*! BinaryBond embed SDK: private video calls for your product.
  *
  *   <script src="https://your-binarybond-host/sdk.js"></script>
  *   const call = BinaryBond.mount('#call', { token });           // new room
  *   const call = BinaryBond.mount('#call', { token, room });     // join a room key you share
- *   call.on('joined', e => …).on('participants', e => …).on('left', …);
+ *   call.on('joined', onJoined).on('participants', onCount).on('left', onLeft);
  *   call.destroy();
  *
  * The room key travels in the iframe URL fragment, which is never sent to any

@@ -20,7 +20,11 @@ const { safeEq } = require('./tenants');
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const VERSION = require('../package.json').version;
-const PAGES = { '/': 'index.html', '/dashboard': 'dashboard.html', '/admin': 'admin.html', '/embed': 'index.html', '/privacy': 'privacy.html', '/docs': 'docs.html' };
+const PAGES = {
+  '/': 'index.html', '/security': 'security.html', '/pricing': 'pricing.html', '/developers': 'developers.html',
+  '/privacy': 'privacy.html', '/terms': 'terms.html', '/join': 'join.html', '/new': 'new.html',
+  '/room': 'room.html', '/embed': 'room.html', '/dashboard': 'dashboard.html', '/admin': 'admin.html',
+};
 
 function createServer(options = {}) {
   const config = options.config || loadConfig();
@@ -97,19 +101,26 @@ function createServer(options = {}) {
   });
 
   // ---- pages & static --------------------------------------------------------
-  // Pages get the shared icon sprite inlined at serve time (one source, no icon flash).
+  // Pages are assembled at serve time from shared partials (icon sprite, site
+  // header and footer), so every page stays in sync without a build step.
   const pageCache = new Map();
-  const renderPage = (file) => {
-    if (process.env.NODE_ENV === 'production' && pageCache.has(file)) return pageCache.get(file);
-    const sprite = fs.readFileSync(path.join(PUBLIC_DIR, 'icons.svg'), 'utf8');
-    const html = fs.readFileSync(path.join(PUBLIC_DIR, file), 'utf8').replace('<!--#sprite-->', sprite);
-    pageCache.set(file, html);
+  const read = (f) => fs.readFileSync(path.join(PUBLIC_DIR, f), 'utf8');
+  const renderPage = (file, route) => {
+    const cacheKey = `${route}:${file}`;
+    if (process.env.NODE_ENV === 'production' && pageCache.has(cacheKey)) return pageCache.get(cacheKey);
+    const header = read('partials/header.html').replace(`href="${route}"`, `href="${route}" aria-current="page"`);
+    const html = read(file)
+      .replace('<!--#sprite-->', read('icons.svg'))
+      .replace('<!--#header-->', header)
+      .replace('<!--#footer-->', read('partials/footer.html'));
+    pageCache.set(cacheKey, html);
     return html;
   };
   for (const [route, file] of Object.entries(PAGES)) {
-    app.get(route, (req, res) => res.set('Cache-Control', 'no-cache').type('html').send(renderPage(file)));
+    app.get(route, (req, res) => res.set('Cache-Control', 'no-cache').type('html').send(renderPage(file, route)));
   }
-  app.get(['/package.json', '/embed.html', '/index.html', '/dashboard.html', '/admin.html', '/docs.html', '/privacy.html'], (req, res) => res.status(404).sendFile(path.join(PUBLIC_DIR, '404.html')));
+  app.get('/docs', (req, res) => res.redirect(301, '/developers'));
+  app.get(['/package.json', '/partials/*', ...Object.values(PAGES).map(f => `/${f}`)], (req, res) => res.status(404).sendFile(path.join(PUBLIC_DIR, '404.html')));
   app.get('/sw.js', (req, res) => res.set({ 'Cache-Control': 'no-cache', 'Service-Worker-Allowed': '/' }).sendFile(path.join(PUBLIC_DIR, 'sw.js')));
   app.use(express.static(PUBLIC_DIR, {
     index: false, dotfiles: 'ignore', extensions: ['html'],

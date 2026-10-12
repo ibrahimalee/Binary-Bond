@@ -181,13 +181,13 @@ test('pages, sdk headers and CSP host hardening', async (t) => {
   const http = require('http');
   const bb = await startServer();
   t.after(() => bb.close());
-  for (const p of ['/', '/dashboard', '/admin', '/docs', '/privacy', '/embed']) {
+  for (const p of ['/', '/security', '/pricing', '/developers', '/docs', '/privacy', '/terms', '/join', '/new', '/room', '/embed', '/dashboard', '/admin']) {
     const r = await api(bb, 'GET', p);
     assert.equal(r.status, 200, p);
-    assert.match(r.text, /<symbol id="i-logo"/, `${p} should have the icon sprite inlined`);
-    assert.doesNotMatch(r.text, /<!--#sprite-->/);
+    if (p !== '/new') assert.match(r.text, /<symbol id="i-logo"/, `${p} should have the icon sprite inlined`);
+    assert.doesNotMatch(r.text, /<!--#(sprite|header|footer)-->/);
   }
-  for (const p of ['/index.html', '/dashboard.html', '/icons.svg/../package.json']) assert.equal((await api(bb, 'GET', p)).status, 404, p);
+  for (const p of ['/index.html', '/room.html', '/dashboard.html', '/partials/header.html', '/icons.svg/../package.json']) assert.equal((await api(bb, 'GET', p)).status, 404, p);
   const sdk = await api(bb, 'GET', '/sdk.js');
   assert.equal(sdk.headers.get('cross-origin-resource-policy'), 'cross-origin');
   assert.equal((await api(bb, 'GET', '/js/app.js')).headers.get('cache-control'), 'no-cache');

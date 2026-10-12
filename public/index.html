@@ -2,278 +2,234 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>BinaryBond — Private calls that leave no trace</title>
-  <meta name="description" content="End-to-end encrypted peer-to-peer video, voice, chat and file sharing. No accounts, no tracking, nothing stored.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BinaryBond | Private, encrypted video meetings</title>
+  <meta name="description" content="Encrypted video meetings that run directly between devices. Start in one click, no account needed, nothing stored.">
   <meta name="referrer" content="no-referrer">
-  <meta name="color-scheme" content="dark light">
-  <meta name="theme-color" content="#07080f" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#ffffff">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="stylesheet" href="/css/app.css">
-  <script type="module" src="/js/app.js"></script>
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/site.css">
+  <script type="module" src="/js/site.js"></script>
 </head>
 <body>
   <!--#sprite-->
+  <!--#header-->
 
-  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
-
-  <div id="app" class="app" data-view="home">
-
-    <!-- ============================== HOME ============================== -->
-    <section class="view view-home" data-view="home" aria-label="Start">
-      <nav class="topnav">
-        <a class="brand" href="/" aria-label="BinaryBond home"><svg class="brand-mark"><use href="#i-logo"/></svg><span class="brand-name">BinaryBond</span></a>
-        <div class="topnav-links">
-          <a href="#how">How it works</a>
-          <a href="#features">Features</a>
-          <a href="/docs">Developers</a>
-          <a href="/privacy">Privacy</a>
-        </div>
-        <div class="topnav-actions">
-          <a class="btn btn-ghost btn-sm hide-sm" href="/dashboard">Dashboard</a>
-          <button class="icon-btn" id="themeBtn" type="button" aria-label="Toggle theme"><svg class="ic"><use href="#i-moon"/></svg></button>
-        </div>
-      </nav>
-
-      <header class="hero">
-        <div class="hero-copy">
-          <p class="eyebrow"><svg class="ic"><use href="#i-shield"/></svg> End-to-end encrypted · No accounts · Nothing stored</p>
-          <h1>Private calls that <span class="grad">leave no trace.</span></h1>
-          <p class="lede">Video, voice, chat and files that flow directly between devices. Your room key never leaves your browser, so not even our server can see who you are or what you share.</p>
-
-          <div class="start-card" id="startCard">
-            <div class="tabs" role="tablist">
-              <button class="tab active" role="tab" aria-selected="true" data-tab="new" type="button">New room</button>
-              <button class="tab" role="tab" aria-selected="false" data-tab="link" type="button">Join with link</button>
-              <button class="tab" role="tab" aria-selected="false" data-tab="pass" type="button">Passphrase</button>
-            </div>
-
-            <div class="tab-panel" data-panel="new">
-              <button class="btn btn-primary btn-lg btn-block" id="newRoomBtn" type="button"><svg class="ic"><use href="#i-sparkle"/></svg> Start a private room</button>
-              <details class="room-opts">
-                <summary><svg class="ic"><use href="#i-settings"/></svg> Room options <svg class="ic chev"><use href="#i-chevron"/></svg></summary>
-                <label class="switch-row"><span><strong>Waiting room</strong><small>You approve everyone before they join</small></span><input type="checkbox" id="optWait" class="switch"></label>
-                <label class="switch-row" id="optRelayRow" hidden><span><strong>Hide IP addresses</strong><small>Route media through an encrypted relay</small></span><input type="checkbox" id="optRelay" class="switch"></label>
-                <label class="select-row"><span><strong>Participants</strong><small>Full-mesh, every link is direct</small></span><select id="optMax" class="select"></select></label>
-              </details>
-            </div>
-
-            <form class="tab-panel" data-panel="link" id="joinLinkForm" hidden>
-              <label class="field">
-                <span class="field-label">Invite link or room key</span>
-                <input class="input" id="joinLinkInput" autocomplete="off" spellcheck="false" placeholder="https://…/#k3y or paste the key">
-              </label>
-              <button class="btn btn-primary btn-block" type="submit">Continue <svg class="ic"><use href="#i-arrow"/></svg></button>
-            </form>
-
-            <form class="tab-panel" data-panel="pass" id="passForm" hidden>
-              <label class="field">
-                <span class="field-label">Room name</span>
-                <input class="input" id="passRoom" autocomplete="off" spellcheck="false" placeholder="e.g. sunday-standup" required>
-              </label>
-              <label class="field">
-                <span class="field-label">Shared passphrase</span>
-                <input class="input" id="passPhrase" type="password" autocomplete="new-password" minlength="8" placeholder="8+ characters, agreed in person" required>
-              </label>
-              <p class="hint"><svg class="ic"><use href="#i-key"/></svg> Both sides type the same name and passphrase. No link is ever sent.</p>
-              <button class="btn btn-primary btn-block" type="submit" id="passBtn">Derive key &amp; continue <svg class="ic"><use href="#i-arrow"/></svg></button>
-            </form>
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <h1>Video meetings that stay between the people in them.</h1>
+          <p class="lede">BinaryBond connects devices directly and encrypts everything end to end. Start a meeting in one click. No account, no download, and nothing stored on our side.</p>
+          <div class="hero-cta">
+            <a class="btn btn-primary btn-lg" href="/new"><svg class="ic"><use href="#i-cam"/></svg>Start a meeting</a>
+            <a class="btn btn-lg" href="/join">Join with a link</a>
+          </div>
+          <div class="hero-note">
+            <span><svg class="ic"><use href="#i-check"/></svg>End-to-end encrypted</span>
+            <span><svg class="ic"><use href="#i-check"/></svg>No sign-up</span>
+            <span><svg class="ic"><use href="#i-check"/></svg>Runs in your browser</span>
           </div>
         </div>
 
-        <div class="hero-visual" aria-hidden="true">
-          <div class="orbit">
-            <div class="node node-a"><svg class="ic"><use href="#i-cam"/></svg></div>
-            <div class="node node-b"><svg class="ic"><use href="#i-mic"/></svg></div>
-            <div class="beam"></div>
-            <div class="lock-badge"><svg class="ic"><use href="#i-lock"/></svg></div>
-            <div class="server-ghost"><svg class="ic"><use href="#i-server"/></svg><span>server sees only noise</span></div>
+        <div class="hero-visual">
+          <div class="shot" role="img" aria-label="A BinaryBond meeting with four participants">
+            <div class="shot-bar"><i></i><i></i><i></i><span><svg class="ic"><use href="#i-lock"/></svg>binarybond.app/room</span></div>
+            <div class="shot-body">
+              <div class="shot-tile speaking"><img src="/img/people/p3.svg" alt=""><span class="name"><svg class="ic"><use href="#i-mic"/></svg>Maya Chen</span></div>
+              <div class="shot-tile"><img src="/img/people/p2.svg" alt=""><span class="name"><svg class="ic"><use href="#i-mic-off"/></svg>Daniel Okafor</span></div>
+              <div class="shot-tile"><img src="/img/people/p5.svg" alt=""><span class="name"><svg class="ic"><use href="#i-mic-off"/></svg>Omar Haddad</span></div>
+              <div class="shot-tile"><img src="/img/people/p6.svg" alt=""><span class="name"><svg class="ic"><use href="#i-mic-off"/></svg>You</span></div>
+            </div>
+            <div class="shot-dock">
+              <b><svg class="ic"><use href="#i-mic"/></svg></b><b><svg class="ic"><use href="#i-cam"/></svg></b><b><svg class="ic"><use href="#i-screen"/></svg></b><b><svg class="ic"><use href="#i-chat"/></svg></b><b><svg class="ic"><use href="#i-people"/></svg></b><b class="red"><svg class="ic"><use href="#i-leave"/></svg></b>
+            </div>
+          </div>
+          <div class="shot-float f1"><span class="badge-ic"><svg class="ic"><use href="#i-shield"/></svg></span><div><strong>End-to-end encrypted</strong><span class="muted">Safety number verified with Maya</span></div></div>
+          <div class="shot-float f2"><img class="float-avatar" src="/img/people/p4.svg" alt=""><div><strong>Priya is waiting</strong><span class="muted">Admit to the meeting?</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="facts" aria-label="Highlights">
+      <div class="container">
+        <div class="fact"><svg class="ic"><use href="#i-lock"/></svg><div><strong>Encrypted end to end</strong><span>Audio, video, chat and files</span></div></div>
+        <div class="fact"><svg class="ic"><use href="#i-link"/></svg><div><strong>No account needed</strong><span>Share a link and start talking</span></div></div>
+        <div class="fact"><svg class="ic"><use href="#i-people"/></svg><div><strong>Up to 8 people</strong><span>Every connection is direct</span></div></div>
+        <div class="fact"><svg class="ic"><use href="#i-server"/></svg><div><strong>Self-hostable</strong><span>Run it on your own server</span></div></div>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="container">
+        <div class="feature-row">
+          <div class="feature-copy">
+            <span class="eyebrow">Private by design</span>
+            <h3>Only the people in the meeting can see or hear it</h3>
+            <p>The meeting key is created in your browser and travels inside the invite link, in a part of the address that browsers never send to a server. Our server passes along encrypted handshakes and nothing else.</p>
+            <ul class="checks">
+              <li><svg class="ic"><use href="#i-check"/></svg>Calls connect device to device over DTLS-SRTP</li>
+              <li><svg class="ic"><use href="#i-check"/></svg>Compare a safety number to rule out interception</li>
+              <li><svg class="ic"><use href="#i-check"/></svg>Optional relay mode hides your IP address from other participants</li>
+            </ul>
+          </div>
+          <div class="feature-media">
+            <div class="mock">
+              <div class="mock-title"><svg class="ic"><use href="#i-key"/></svg>Verify Maya Chen</div>
+              <p class="muted">Read these numbers to each other. If they match, nobody is listening in.</p>
+              <div class="digits"><span>40218</span><span>77351</span><span>09126</span><span>58840</span></div>
+              <div class="btn-row"><span class="btn">They don't match</span><span class="btn btn-primary">They match</span></div>
+            </div>
           </div>
         </div>
-      </header>
 
-      <section class="section" id="features">
-        <h2 class="section-title">Privacy you can verify, not just trust</h2>
-        <div class="feature-grid">
-          <article class="feature"><div class="feature-ic"><svg class="ic"><use href="#i-key"/></svg></div><h3>Zero-knowledge rooms</h3><p>The room key lives in the link's <code>#fragment</code>, which browsers never send to servers. Signaling is sealed with AES-256-GCM.</p></article>
-          <article class="feature"><div class="feature-ic"><svg class="ic"><use href="#i-shield"/></svg></div><h3>Safety numbers</h3><p>Compare six emoji with your contact. If they match, no one is sitting in the middle of your call.</p></article>
-          <article class="feature"><div class="feature-ic"><svg class="ic"><use href="#i-user-plus"/></svg></div><h3>Waiting room &amp; lock</h3><p>Approve every guest, lock the room once everyone's in, or remove people instantly.</p></article>
-          <article class="feature"><div class="feature-ic"><svg class="ic"><use href="#i-wand"/></svg></div><h3>Voice disguise</h3><p>Shift your voice deeper, higher or robotic, applied on your device before audio is sent.</p></article>
-          <article class="feature"><div class="feature-ic"><svg class="ic"><use href="#i-eye-off"/></svg></div><h3>Privacy video filters</h3><p>Blur or pixelate your camera so you can be present without being identifiable.</p></article>
-          <article class="feature"><div class="feature-ic"><svg class="ic"><use href="#i-file"/></svg></div><h3>Clean file drops</h3><p>Direct transfers up to 2 GB with SHA-256 verification, and photos are stripped of GPS and EXIF data.</p></article>
-          <article class="feature"><div class="feature-ic"><svg class="ic"><use href="#i-flame"/></svg></div><h3>Disappearing chat</h3><p>Messages that self-destruct on a timer, burn-after-reading notes, and unsend for everyone.</p></article>
-          <article class="feature"><div class="feature-ic"><svg class="ic"><use href="#i-panic"/></svg></div><h3>Panic wipe</h3><p>Press <kbd>Shift</kbd>+<kbd>Esc</kbd> and everything closes, cameras stop, and local traces are erased.</p></article>
-          <article class="feature"><div class="feature-ic"><svg class="ic"><use href="#i-eye"/></svg></div><h3>Shoulder-surf shield</h3><p>The call blurs itself whenever the window loses focus, and the invite link can be hidden from the address bar.</p></article>
+        <div class="feature-row reverse">
+          <div class="feature-copy">
+            <span class="eyebrow">Host controls</span>
+            <h3>You decide who gets in, and for how long</h3>
+            <p>Turn on the waiting room and approve each guest yourself. Lock the meeting once everyone has arrived, remove someone in one click, or set the room to close itself at a set time.</p>
+            <ul class="checks">
+              <li><svg class="ic"><use href="#i-check"/></svg>Waiting room with approve and deny</li>
+              <li><svg class="ic"><use href="#i-check"/></svg>Lock, remove participants, end for everyone</li>
+              <li><svg class="ic"><use href="#i-check"/></svg>Scheduled self-destruct, enforced by the server</li>
+            </ul>
+          </div>
+          <div class="feature-media stack">
+            <div class="mock">
+              <div class="mock-title"><svg class="ic"><use href="#i-user-plus"/></svg>Waiting room</div>
+              <div class="mock-row"><img src="/img/people/p4.svg" alt=""><div class="grow"><strong>Priya Raman</strong><small>wants to join</small></div><span class="btn">Deny</span><span class="btn btn-primary">Admit</span></div>
+              <div class="mock-row"><img src="/img/people/p1.svg" alt=""><div class="grow"><strong>Lucas Meyer</strong><small>wants to join</small></div><span class="btn">Deny</span><span class="btn btn-primary">Admit</span></div>
+            </div>
+            <div class="mock">
+              <div class="mock-row"><div class="grow"><strong>Lock meeting</strong><small>No one new can join, even with the link</small></div><input class="switch" type="checkbox" checked tabindex="-1" aria-hidden="true"></div>
+            </div>
+          </div>
         </div>
-      </section>
 
-      <section class="section" id="how">
-        <h2 class="section-title">How it works</h2>
+        <div class="feature-row">
+          <div class="feature-copy">
+            <span class="eyebrow">Files and chat</span>
+            <h3>Share files and messages without leaving a trail</h3>
+            <p>Files go straight to the people in the call and are checked for integrity on arrival. Photos have their location and camera data removed before they are sent. Messages can disappear on a timer or vanish once read.</p>
+            <ul class="checks">
+              <li><svg class="ic"><use href="#i-check"/></svg>Transfers up to 2 GB, each one needs the recipient's approval</li>
+              <li><svg class="ic"><use href="#i-check"/></svg>Disappearing messages and read-once notes</li>
+              <li><svg class="ic"><use href="#i-check"/></svg>Polls and a shared whiteboard for working sessions</li>
+            </ul>
+          </div>
+          <div class="feature-media">
+            <div class="mock">
+              <div class="mock-chat">
+                <div class="bubble-meta">Daniel Okafor</div>
+                <div class="bubble-in">Here are the signed contracts.</div>
+                <div class="mock-file">
+                  <span class="file-ic"><svg class="ic"><use href="#i-file"/></svg></span>
+                  <div class="grow"><strong>contracts-final.pdf</strong><small class="muted">2.4 MB</small><div class="mock-bar"><i></i></div></div>
+                </div>
+                <div class="bubble-out">Got them, thanks. This thread clears itself in an hour.</div>
+                <div class="bubble-meta end"><svg class="ic"><use href="#i-timer"/></svg>Disappears in 1h</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="feature-row reverse">
+          <div class="feature-copy">
+            <span class="eyebrow">Built-in privacy tools</span>
+            <h3>Show up on your own terms</h3>
+            <p>Blur or pixelate your camera, or change the sound of your voice. Both are applied on your device before anything is sent. If you need to leave fast, one shortcut closes everything and clears local data.</p>
+            <ul class="checks">
+              <li><svg class="ic"><use href="#i-check"/></svg>Camera blur and pixelation, voice changer</li>
+              <li><svg class="ic"><use href="#i-check"/></svg>Recording only starts if every participant agrees</li>
+              <li><svg class="ic"><use href="#i-check"/></svg>Panic shortcut: <kbd>Shift</kbd> + <kbd>Esc</kbd></li>
+            </ul>
+          </div>
+          <div class="feature-media">
+            <div class="privacy-shot">
+              <div class="shot-tile blurred"><img src="/img/people/p5.svg" alt=""><span class="name"><svg class="ic"><use href="#i-eye-off"/></svg>Camera blurred</span></div>
+              <div class="chips"><span class="chip">Natural</span><span class="chip active">Blur</span><span class="chip">Pixelate</span><span class="chip">Voice: Deep</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt">
+      <div class="container">
+        <div class="section-head center">
+          <h2>Made for conversations that matter</h2>
+          <p>For anyone who would rather not hand their meetings to an advertising company.</p>
+        </div>
+        <div class="card-grid">
+          <article class="card"><span class="card-ic"><svg class="ic"><use href="#i-building"/></svg></span><h3>Teams</h3><p>Stand-ups, reviews and one-on-ones without another account to manage or another vendor holding your recordings.</p></article>
+          <article class="card"><span class="card-ic"><svg class="ic"><use href="#i-stethoscope"/></svg></span><h3>Care providers</h3><p>See clients over video with conversations that travel only between your device and theirs.</p></article>
+          <article class="card"><span class="card-ic"><svg class="ic"><use href="#i-scale"/></svg></span><h3>Legal and finance</h3><p>Discuss confidential matters, verify who you are talking to and exchange documents in the same call.</p></article>
+          <article class="card"><span class="card-ic"><svg class="ic"><use href="#i-newspaper"/></svg></span><h3>Journalists</h3><p>Talk to sources with relay mode, a disguised voice and a meeting room that disappears afterwards.</p></article>
+          <article class="card"><span class="card-ic"><svg class="ic"><use href="#i-code"/></svg></span><h3>Product builders</h3><p>Embed encrypted calls in your own app with a session API, webhooks and white-label branding.</p></article>
+          <article class="card"><span class="card-ic"><svg class="ic"><use href="#i-heart"/></svg></span><h3>Friends and family</h3><p>Send a link, tap join. No one needs to install anything or create an account.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">How it works</span>
+          <h2>From link to call in seconds</h2>
+        </div>
         <ol class="steps">
-          <li><span class="step-n">1</span><h3>Your browser creates a secret</h3><p>A random 128-bit key is generated locally and placed after the <code>#</code> in your invite link.</p></li>
-          <li><span class="step-n">2</span><h3>Keys are derived, not shared</h3><p>From that secret your browser derives a room ID, an access token and an encryption key. The server only ever sees the first two, and stores only a hash of the token.</p></li>
-          <li><span class="step-n">3</span><h3>Devices connect directly</h3><p>Encrypted handshakes are relayed once. After that, audio, video, chat and files travel peer-to-peer over DTLS-SRTP.</p></li>
+          <li><h3>Start a meeting</h3><p>Your browser creates a random key and puts it in the meeting link. It never reaches our server.</p></li>
+          <li><h3>Share the link</h3><p>Send it however you like. Turn on the waiting room if you want to approve each person.</p></li>
+          <li><h3>Talk directly</h3><p>After a short encrypted handshake, audio, video, chat and files flow straight between devices.</p></li>
         </ol>
-        <div class="knows">
-          <div class="knows-col">
-            <h3><svg class="ic"><use href="#i-server"/></svg> What the server knows</h3>
-            <ul><li>An opaque room ID</li><li>How many people are connected</li><li>When the room opened and closed</li></ul>
-          </div>
-          <div class="knows-col knows-no">
-            <h3><svg class="ic"><use href="#i-eye-off"/></svg> What it can never see</h3>
-            <ul><li>Your name, messages or files</li><li>Audio and video</li><li>The room key or invite link</li><li>Connection fingerprints</li></ul>
-          </div>
-        </div>
-      </section>
-
-      <footer class="footer">
-        <div class="brand"><svg class="brand-mark"><use href="#i-logo"/></svg><span class="brand-name">BinaryBond</span></div>
-        <p class="muted">Built by <span class="footer-accent">Ibrahemeogoblin</span> · Open, self-hostable, tracker-free.</p>
-        <nav class="footer-links"><a href="/privacy">Privacy</a><a href="/docs">API &amp; Embed</a><a href="/dashboard">Dashboard</a></nav>
-      </footer>
+      </div>
     </section>
 
-    <!-- ============================== LOBBY ============================== -->
-    <section class="view view-lobby" data-view="lobby" aria-label="Get ready" hidden>
-      <div class="lobby">
-        <div class="lobby-preview">
-          <div class="preview-frame" id="previewFrame">
-            <video id="previewVideo" autoplay playsinline muted></video>
-            <div class="preview-avatar" id="previewAvatar"></div>
-            <div class="preview-meter" aria-hidden="true"><span id="previewMeter"></span></div>
-            <div class="preview-controls">
-              <button class="ctrl" id="lobbyMic" type="button" aria-label="Microphone"><svg class="ic"><use href="#i-mic"/></svg></button>
-              <button class="ctrl" id="lobbyCam" type="button" aria-label="Camera"><svg class="ic"><use href="#i-cam"/></svg></button>
-              <button class="ctrl" id="lobbySettings" type="button" aria-label="Devices and filters"><svg class="ic"><use href="#i-settings"/></svg></button>
-            </div>
-            <p class="preview-status" id="previewStatus"></p>
-          </div>
-          <div class="chips" aria-label="Privacy filters">
-            <span class="chips-label"><svg class="ic"><use href="#i-eye-off"/></svg> Video</span>
-            <button class="chip active" data-vfx="none" type="button">Natural</button>
-            <button class="chip" data-vfx="blur" type="button">Blur</button>
-            <button class="chip" data-vfx="pixelate" type="button">Pixelate</button>
-          </div>
-          <div class="chips" aria-label="Voice disguise">
-            <span class="chips-label"><svg class="ic"><use href="#i-wand"/></svg> Voice</span>
-            <button class="chip active" data-afx="off" type="button">Natural</button>
-            <button class="chip" data-afx="deep" type="button">Deep</button>
-            <button class="chip" data-afx="high" type="button">High</button>
-            <button class="chip" data-afx="robot" type="button">Robot</button>
-          </div>
+    <section class="section section-alt">
+      <div class="container feature-row">
+        <div class="feature-copy">
+          <span class="eyebrow">For developers</span>
+          <h3>Add private video calls to your product</h3>
+          <p>Create a session on your server, drop the SDK into your page and you have encrypted calls with your own branding. Usage tracking, webhooks and billing are included.</p>
+          <div class="btn-row"><a class="btn btn-primary" href="/developers">Read the docs</a><a class="btn" href="/dashboard">Get an API key</a></div>
         </div>
+        <pre class="code-sample" aria-label="Code example"><code><span class="c">// Server: create a session</span>
+const res = await fetch('https://your-host/v1/sessions', {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${KEY}` },
+  body: JSON.stringify({ maxPeers: 4 }),
+});
 
-        <div class="lobby-side">
-          <button class="back-link" id="lobbyBack" type="button"><svg class="ic flip"><use href="#i-arrow"/></svg> Back</button>
-          <h2 id="lobbyTitle">Ready to join?</h2>
-          <p class="muted" id="lobbySub">Your camera and mic stay on this device until you join.</p>
-          <label class="field">
-            <span class="field-label">Your display name</span>
-            <input class="input" id="nameInput" maxlength="40" autocomplete="off" placeholder="Anonymous">
-            <small class="field-hint">Encrypted. Only people in the room can read it.</small>
-          </label>
-          <button class="btn btn-primary btn-lg btn-block" id="joinBtn" type="button">Join now</button>
-          <div class="invite-box" id="lobbyInvite" hidden>
-            <span class="field-label">Invite others</span>
-            <div class="invite-row">
-              <input class="input mono" id="lobbyLink" readonly aria-label="Invite link">
-              <button class="icon-btn" id="lobbyCopy" type="button" aria-label="Copy link"><svg class="ic"><use href="#i-copy"/></svg></button>
-              <button class="icon-btn" id="lobbyQr" type="button" aria-label="Show QR code"><svg class="ic"><use href="#i-qr"/></svg></button>
-            </div>
-            <small class="field-hint"><svg class="ic"><use href="#i-lock"/></svg> Anyone with this link can request to join. Share it privately.</small>
-          </div>
-          <button class="back-link check-link" id="netCheckBtn" type="button"><svg class="ic"><use href="#i-activity"/></svg> Test my connection</button>
-          <ul class="assurances">
-            <li><svg class="ic"><use href="#i-check"/></svg> End-to-end encrypted media, chat &amp; files</li>
-            <li><svg class="ic"><use href="#i-check"/></svg> No account, no cookies, no analytics</li>
-            <li><svg class="ic"><use href="#i-check"/></svg> Room disappears when the last person leaves</li>
-          </ul>
+<span class="c">// Browser: show the call</span>
+BinaryBond.mount('#call', { token })
+  .on('joined', e =&gt; console.log(e.participants));</code></pre>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section-head center"><h2>Common questions</h2></div>
+        <div class="faq">
+          <details><summary>Do I need an account?<svg class="ic"><use href="#i-plus"/></svg></summary><p>No. Click Start a meeting, share the link, and you are in. Accounts exist only for developers who embed BinaryBond in their own products.</p></details>
+          <details><summary>Can BinaryBond see or record my meetings?<svg class="ic"><use href="#i-plus"/></svg></summary><p>No. The key that protects a meeting is created in your browser and never sent to us. Our server only helps devices find each other, and the messages it passes along are encrypted with that key.</p></details>
+          <details><summary>How many people can join?<svg class="ic"><use href="#i-plus"/></svg></summary><p>Up to 4 on the free tier and up to 8 on the Business plan. Every participant connects directly to every other participant, which keeps calls private but makes very large meetings impractical.</p></details>
+          <details><summary>Will other participants see my IP address?<svg class="ic"><use href="#i-plus"/></svg></summary><p>In a direct call, yes, as with any peer-to-peer app. Turn on relay mode before joining and your connection goes through an encrypted relay so others cannot see it.</p></details>
+          <details><summary>Does it work on phones?<svg class="ic"><use href="#i-plus"/></svg></summary><p>Yes. It runs in Safari, Chrome, Firefox and Edge on desktop and mobile, and you can add it to your home screen.</p></details>
+          <details><summary>Can I run it on my own server?<svg class="ic"><use href="#i-plus"/></svg></summary><p>Yes. BinaryBond ships with a Docker setup that includes automatic HTTPS and a TURN relay. The developer docs cover the details.</p></details>
         </div>
       </div>
     </section>
 
-    <!-- ============================== WAITING ============================== -->
-    <section class="view view-waiting" data-view="waiting" aria-label="Waiting room" hidden>
-      <div class="center-card">
-        <div class="pulse-ring"><svg class="ic"><use href="#i-user-plus"/></svg></div>
-        <h2>Waiting for the host</h2>
-        <p class="muted">You'll be let in as soon as someone in the room approves you. Your camera isn't shared yet.</p>
-        <button class="btn btn-ghost" id="cancelWaitBtn" type="button">Cancel</button>
+    <section class="cta-band">
+      <div class="container">
+        <div><h2>Your next meeting can be private.</h2><p>Free to start. No account, no download.</p></div>
+        <div class="btn-row"><a class="btn btn-primary btn-lg" href="/new">Start a meeting</a><a class="btn btn-lg" href="/pricing">See pricing</a></div>
       </div>
     </section>
+  </main>
 
-    <!-- ============================== CALL ============================== -->
-    <section class="view view-call" data-view="call" aria-label="Call" hidden>
-      <div class="call-top">
-        <div class="call-meta">
-          <button class="pill pill-secure" id="secureBtn" type="button" title="Encryption &amp; connection details"><svg class="ic"><use href="#i-shield"/></svg><span>Encrypted</span></button>
-          <span class="pill pill-rec" id="recPill" hidden><i></i><span>REC</span></span>
-          <span class="pill" id="lockPill" hidden><svg class="ic"><use href="#i-lock"/></svg> Locked</span>
-          <span class="pill mono" id="callTimer">00:00</span>
-          <span class="pill pill-warn" id="expiryPill" hidden><svg class="ic"><use href="#i-timer"/></svg><span></span></span>
-          <span class="pill pill-warn" id="netPill" hidden><svg class="ic"><use href="#i-refresh"/></svg> Reconnecting…</span>
-        </div>
-        <div class="call-actions">
-          <button class="btn btn-ghost btn-sm" id="inviteBtn" type="button"><svg class="ic"><use href="#i-user-plus"/></svg><span class="hide-sm">Invite</span></button>
-          <button class="icon-btn" id="layoutBtn" type="button" aria-label="Change layout"><svg class="ic"><use href="#i-grid"/></svg></button>
-        </div>
-      </div>
-
-      <div class="call-body">
-        <main class="stage" id="stage" aria-label="Participants">
-          <div class="grid" id="grid"></div>
-          <div class="reactions-layer" id="reactionsLayer" aria-hidden="true"></div>
-          <div class="knocks" id="knocks" aria-live="assertive"></div>
-          <div class="drop-hint" id="dropHint" hidden><svg class="ic"><use href="#i-file"/></svg><span>Drop files to share privately</span></div>
-        </main>
-        <aside class="sidepanel" id="sidepanel" hidden aria-label="Side panel">
-          <header class="side-head">
-            <div class="tabs tabs-sm" role="tablist">
-              <button class="tab" data-side="chat" type="button">Chat</button>
-              <button class="tab" data-side="people" type="button">People</button>
-              <button class="tab" data-side="security" type="button">Security</button>
-              <button class="tab" data-side="settings" type="button">Settings</button>
-            </div>
-            <button class="icon-btn" id="closeSide" type="button" aria-label="Close panel"><svg class="ic"><use href="#i-x"/></svg></button>
-          </header>
-          <div class="side-body" id="sideBody"></div>
-        </aside>
-      </div>
-
-      <div class="muted-hint" id="mutedHint" hidden><svg class="ic"><use href="#i-mic-off"/></svg> You're muted. Press <kbd>M</kbd> to talk.</div>
-
-      <nav class="dock" aria-label="Call controls">
-        <button class="ctrl" id="micBtn" type="button" aria-label="Mute microphone" title="Microphone (M)"><svg class="ic"><use href="#i-mic"/></svg><span class="lvl"></span></button>
-        <button class="ctrl" id="camBtn" type="button" aria-label="Turn camera off" title="Camera (V)"><svg class="ic"><use href="#i-cam"/></svg></button>
-        <button class="ctrl hide-xs" id="screenBtn" type="button" aria-label="Share screen" title="Share screen (S)"><svg class="ic"><use href="#i-screen"/></svg></button>
-        <button class="ctrl" id="reactBtn" type="button" aria-label="Send a reaction" title="Reactions"><svg class="ic"><use href="#i-smile"/></svg></button>
-        <button class="ctrl hide-xs" id="handBtn" type="button" aria-label="Raise hand" title="Raise hand (H)"><svg class="ic"><use href="#i-hand"/></svg></button>
-        <span class="dock-sep"></span>
-        <button class="ctrl" id="chatBtn" type="button" aria-label="Chat" title="Chat (C)"><svg class="ic"><use href="#i-chat"/></svg><span class="badge" id="chatBadge" hidden></span></button>
-        <button class="ctrl hide-xs" id="peopleBtn" type="button" aria-label="People" title="People (P)"><svg class="ic"><use href="#i-people"/></svg><span class="badge badge-count" id="peopleBadge"></span></button>
-        <button class="ctrl" id="moreBtn" type="button" aria-label="More options"><svg class="ic"><use href="#i-more"/></svg></button>
-        <button class="ctrl ctrl-leave" id="leaveBtn" type="button" aria-label="Leave call" title="Leave"><svg class="ic"><use href="#i-leave"/></svg></button>
-      </nav>
-    </section>
-
-    <!-- ============================== ENDED ============================== -->
-    <section class="view view-ended" data-view="ended" aria-label="Call ended" hidden>
-      <div class="center-card">
-        <div class="ended-ic"><svg class="ic"><use href="#i-check"/></svg></div>
-        <h2 id="endedTitle">You left the call</h2>
-        <p class="muted" id="endedSub">Nothing from this call was stored. Messages and files existed only on your devices.</p>
-        <p class="ended-stats" id="endedStats"></p>
-        <div class="btn-row">
-          <button class="btn btn-ghost" id="rejoinBtn" type="button"><svg class="ic"><use href="#i-refresh"/></svg> Rejoin</button>
-          <button class="btn btn-primary" id="homeBtn" type="button">New room</button>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <div class="privacy-shield" id="privacyShield" hidden><svg class="ic"><use href="#i-eye-off"/></svg><p>Hidden while the window is inactive</p></div>
-  <noscript><p class="noscript">BinaryBond needs JavaScript to encrypt your call in the browser.</p></noscript>
+  <!--#footer-->
 </body>
 </html>

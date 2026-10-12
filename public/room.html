@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Meeting | BinaryBond</title>
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0f1115">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/room.css">
+  <script type="module" src="/js/app.js"></script>
+</head>
+<body class="theme-dark">
+  <!--#sprite-->
+
+  <div id="app" class="app" data-view="loading">
+
+    <!-- Lobby -->
+    <section class="view view-lobby" data-view="lobby" aria-label="Get ready" hidden>
+      <header class="room-header">
+        <a class="brand" href="/" id="brandLink"><svg class="brand-mark" aria-hidden="true"><use href="#i-logo"/></svg><span class="brand-name">BinaryBond</span></a>
+        <span class="pill pill-secure"><svg class="ic"><use href="#i-lock"/></svg>End-to-end encrypted</span>
+      </header>
+
+      <div class="lobby">
+        <div class="lobby-preview">
+          <div class="preview-frame" id="previewFrame">
+            <video id="previewVideo" autoplay playsinline muted></video>
+            <div class="preview-avatar" id="previewAvatar"></div>
+            <div class="preview-meter" aria-hidden="true"><span id="previewMeter"></span></div>
+            <p class="preview-status" id="previewStatus"></p>
+            <div class="preview-controls">
+              <button class="ctrl" id="lobbyMic" type="button" aria-label="Microphone"><svg class="ic"><use href="#i-mic"/></svg></button>
+              <button class="ctrl" id="lobbyCam" type="button" aria-label="Camera"><svg class="ic"><use href="#i-cam"/></svg></button>
+              <button class="ctrl" id="lobbySettings" type="button" aria-label="Audio and video settings"><svg class="ic"><use href="#i-settings"/></svg></button>
+            </div>
+          </div>
+          <div class="lobby-filters">
+            <div class="chips" aria-label="Camera filter">
+              <span class="chips-label"><svg class="ic"><use href="#i-eye-off"/></svg>Camera</span>
+              <button class="chip active" data-vfx="none" type="button">Natural</button>
+              <button class="chip" data-vfx="blur" type="button">Blur</button>
+              <button class="chip" data-vfx="pixelate" type="button">Pixelate</button>
+            </div>
+            <div class="chips" aria-label="Voice">
+              <span class="chips-label"><svg class="ic"><use href="#i-wand"/></svg>Voice</span>
+              <button class="chip active" data-afx="off" type="button">Natural</button>
+              <button class="chip" data-afx="deep" type="button">Deep</button>
+              <button class="chip" data-afx="high" type="button">High</button>
+              <button class="chip" data-afx="robot" type="button">Robot</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="lobby-side">
+          <h1 id="lobbyTitle">Ready to join?</h1>
+          <p class="muted" id="lobbySub">Your camera and microphone stay on this device until you join.</p>
+          <label class="field">
+            <span class="field-label">Your name</span>
+            <input class="input" id="nameInput" maxlength="40" autocomplete="name" placeholder="Enter your name">
+          </label>
+
+          <details class="host-opts" id="hostOpts" hidden>
+            <summary><svg class="ic"><use href="#i-settings"/></svg>Meeting settings<svg class="ic chev"><use href="#i-chevron"/></svg></summary>
+            <label class="switch-row"><span><strong>Waiting room</strong><small>Approve each person before they join</small></span><input type="checkbox" id="optWait" class="switch"></label>
+            <label class="switch-row" id="optRelayRow" hidden><span><strong>Hide IP addresses</strong><small>Send everyone's media through the relay</small></span><input type="checkbox" id="optRelay" class="switch"></label>
+            <label class="select-row"><span><strong>Participants</strong><small>Maximum number of people</small></span><select id="optMax" class="select"></select></label>
+          </details>
+
+          <button class="btn btn-primary btn-lg btn-block" id="joinBtn" type="button">Join now</button>
+
+          <div class="invite-box" id="lobbyInvite" hidden>
+            <span class="field-label">Meeting link</span>
+            <div class="invite-row">
+              <input class="input mono" id="lobbyLink" readonly aria-label="Meeting link">
+              <button class="btn" id="lobbyCopy" type="button"><svg class="ic"><use href="#i-copy"/></svg>Copy</button>
+              <button class="icon-btn" id="lobbyQr" type="button" aria-label="Show QR code"><svg class="ic"><use href="#i-qr"/></svg></button>
+            </div>
+            <p class="field-hint"><svg class="ic"><use href="#i-lock"/></svg>Anyone with this link can ask to join. Share it privately.</p>
+          </div>
+
+          <div class="lobby-links">
+            <button class="link-btn" id="netCheckBtn" type="button"><svg class="ic"><use href="#i-activity"/></svg>Test my connection</button>
+            <a class="link-btn" href="/" id="lobbyBack"><svg class="ic flip"><use href="#i-arrow"/></svg>Back to home</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Waiting room -->
+    <section class="view view-center" data-view="waiting" aria-label="Waiting room" hidden>
+      <div class="center-card">
+        <span class="spinner big" aria-hidden="true"></span>
+        <h1>Waiting for the host</h1>
+        <p class="muted">You'll join as soon as someone in the meeting lets you in. Nobody can see or hear you yet.</p>
+        <button class="btn" id="cancelWaitBtn" type="button">Cancel</button>
+      </div>
+    </section>
+
+    <!-- Call -->
+    <section class="view view-call" data-view="call" aria-label="Meeting" hidden>
+      <div class="call-top">
+        <div class="call-meta">
+          <button class="pill pill-secure" id="secureBtn" type="button" title="Encryption and connection details"><svg class="ic"><use href="#i-lock"/></svg><span class="hide-sm">Encrypted</span></button>
+          <span class="pill pill-rec" id="recPill" hidden><i></i><span>REC</span></span>
+          <span class="pill" id="lockPill" hidden><svg class="ic"><use href="#i-lock"/></svg>Locked</span>
+          <span class="pill mono" id="callTimer">00:00</span>
+          <span class="pill pill-warn" id="expiryPill" hidden><svg class="ic"><use href="#i-timer"/></svg><span></span></span>
+          <span class="pill pill-warn" id="netPill" hidden><svg class="ic"><use href="#i-refresh"/></svg>Reconnecting</span>
+        </div>
+        <div class="call-actions">
+          <button class="btn btn-sm" id="inviteBtn" type="button"><svg class="ic"><use href="#i-user-plus"/></svg><span class="hide-sm">Invite</span></button>
+          <button class="icon-btn" id="layoutBtn" type="button" aria-label="Change layout" title="Change layout"><svg class="ic"><use href="#i-grid"/></svg></button>
+        </div>
+      </div>
+
+      <div class="call-body">
+        <main class="stage" id="stage" aria-label="Participants">
+          <div class="grid" id="grid"></div>
+          <div class="reactions-layer" id="reactionsLayer" aria-hidden="true"></div>
+          <div class="knocks" id="knocks" aria-live="assertive"></div>
+          <div class="drop-hint" id="dropHint" hidden><svg class="ic"><use href="#i-file"/></svg><span>Drop files to send them to everyone</span></div>
+        </main>
+        <aside class="sidepanel" id="sidepanel" hidden aria-label="Side panel">
+          <header class="side-head">
+            <div class="tabs" role="tablist">
+              <button class="tab" data-side="chat" type="button">Chat</button>
+              <button class="tab" data-side="people" type="button">People</button>
+              <button class="tab" data-side="security" type="button">Security</button>
+              <button class="tab" data-side="settings" type="button">Settings</button>
+            </div>
+            <button class="icon-btn" id="closeSide" type="button" aria-label="Close panel"><svg class="ic"><use href="#i-x"/></svg></button>
+          </header>
+          <div class="side-body" id="sideBody"></div>
+        </aside>
+      </div>
+
+      <div class="muted-hint" id="mutedHint" hidden><svg class="ic"><use href="#i-mic-off"/></svg>You're muted. Press <kbd>M</kbd> to unmute.</div>
+
+      <nav class="dock" aria-label="Meeting controls">
+        <div class="dock-group">
+          <button class="ctrl" id="micBtn" type="button" aria-label="Mute" title="Mute (M)"><svg class="ic"><use href="#i-mic"/></svg><span class="lvl"></span></button>
+          <button class="ctrl" id="camBtn" type="button" aria-label="Stop video" title="Video (V)"><svg class="ic"><use href="#i-cam"/></svg></button>
+        </div>
+        <div class="dock-group">
+          <button class="ctrl hide-xs" id="screenBtn" type="button" aria-label="Share screen" title="Share screen (S)"><svg class="ic"><use href="#i-screen"/></svg></button>
+          <button class="ctrl" id="reactBtn" type="button" aria-label="Reactions" title="Reactions"><svg class="ic"><use href="#i-smile"/></svg></button>
+          <button class="ctrl hide-xs" id="handBtn" type="button" aria-label="Raise hand" title="Raise hand (H)"><svg class="ic"><use href="#i-hand"/></svg></button>
+          <button class="ctrl" id="chatBtn" type="button" aria-label="Chat" title="Chat (C)"><svg class="ic"><use href="#i-chat"/></svg><span class="badge" id="chatBadge" hidden></span></button>
+          <button class="ctrl hide-xs" id="peopleBtn" type="button" aria-label="Participants" title="Participants (P)"><svg class="ic"><use href="#i-people"/></svg><span class="badge badge-count" id="peopleBadge"></span></button>
+          <button class="ctrl" id="moreBtn" type="button" aria-label="More options" title="More"><svg class="ic"><use href="#i-more"/></svg></button>
+        </div>
+        <button class="ctrl ctrl-leave" id="leaveBtn" type="button" aria-label="Leave meeting"><svg class="ic"><use href="#i-leave"/></svg><span class="hide-sm">Leave</span></button>
+      </nav>
+    </section>
+
+    <!-- Ended -->
+    <section class="view view-center" data-view="ended" aria-label="Meeting ended" hidden>
+      <div class="center-card">
+        <h1 id="endedTitle">You left the meeting</h1>
+        <p class="muted" id="endedSub">Nothing from this meeting was stored.</p>
+        <p class="ended-stats" id="endedStats"></p>
+        <div class="btn-row center">
+          <button class="btn" id="rejoinBtn" type="button">Rejoin</button>
+          <button class="btn btn-primary" id="homeBtn" type="button">Start a new meeting</button>
+        </div>
+        <a class="link-btn" href="/">Return to home page</a>
+      </div>
+    </section>
+  </div>
+
+  <div class="privacy-shield" id="privacyShield" hidden><svg class="ic"><use href="#i-eye-off"/></svg><p>Hidden while this window is in the background</p></div>
+  <noscript><p class="noscript">BinaryBond needs JavaScript to encrypt your meeting.</p></noscript>
+</body>
+</html>

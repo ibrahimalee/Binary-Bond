@@ -2,7 +2,7 @@
 // branding, webhooks and allowed embed domains.
 
 import { $, h, icon, formatDuration } from './util.js';
-import { toast, applyTheme, confirmDialog } from './ui.js';
+import { toast, confirmDialog } from './ui.js';
 import { api, barChart, fmtNum, fmtDate, codeBlock, revealSecret } from './console.js';
 
 const KEY = 'bb:apiKey';
@@ -11,7 +11,6 @@ let cfg = null;
 let key = sessionStorage.getItem(KEY);
 let me = null;
 
-applyTheme();
 init();
 
 async function init() {
@@ -102,7 +101,7 @@ function render(meRes, usage, rooms, freshKey) {
     h('header.console-head',
       h('div', h('h1', me.name), h('p.muted', `Workspace ${me.id} · ${plan.label} plan · since ${fmtDate(me.createdAt)}`)),
       h('div.btn-row', h('a.btn.btn-ghost', { href: '/openapi.json', target: '_blank', rel: 'noopener' }, icon('code'), 'OpenAPI'), h('a.btn.btn-ghost', { href: '/docs' }, icon('note'), 'Docs'), h('a.btn.btn-primary', { href: '/', target: '_blank', rel: 'noopener' }, icon('sparkle'), 'Open app'))),
-    freshKey ? revealSecret('Your API key — copy it now', freshKey, 'It is shown only once. We store only a hash of it.') : '',
+    freshKey ? revealSecret('Your API key', freshKey, 'Copy it now. It is shown only once, and we only store a hash of it.') : '',
     h('section.cards',
       stat('Live rooms', fmtNum(rooms.length), `${fmtNum(rooms.reduce((s, r) => s + r.peers, 0))} people connected`, 'span-3'),
       stat('Rooms (30d)', fmtNum(totalRooms), 'Created with your tokens', 'span-3'),
@@ -119,8 +118,8 @@ function render(meRes, usage, rooms, freshKey) {
         h('dl.kv',
           h('dt', 'Participants / room'), h('dd', String(plan.maxPeers)),
           h('dt', 'Max call length'), h('dd', formatDuration(plan.maxMinutes * 60)),
-          h('dt', 'IP-hiding relay'), h('dd', plan.relay ? 'Included' : '—'),
-          h('dt', 'White-label'), h('dd', plan.whitelabel ? 'Included' : '—'))),
+          h('dt', 'IP-hiding relay'), h('dd', plan.relay ? 'Included' : 'Not included'),
+          h('dt', 'White-label'), h('dd', plan.whitelabel ? 'Included' : 'Not included'))),
 
       plansCard(),
       sessionCard(),

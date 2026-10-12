@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-label="Video call participant">
+  <defs>
+    <linearGradient id="wp4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0e8de"/><stop offset="1" stop-color="#e3d8ca"/></linearGradient>
+    <radialGradient id="lp4" cx=".3" cy=".1" r=".9"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="640" height="400" fill="url(#wp4)"/>
+  <rect y="330" width="640" height="70" fill="#000" opacity=".04"/>
+  
+      <rect x="70" y="60" width="120" height="90" rx="4" fill="#fbf8f3" stroke="#8a7560" stroke-width="6"/>
+      <path d="M84 136l30-36 22 24 16-14 24 26z" fill="#9db7a2"/><circle cx="160" cy="86" r="9" fill="#e8b765"/>
+  <g transform="translate(320 410) scale(1.28) translate(-320 -400)">
+  <circle cx="320" cy="96" r="30" fill="#24201c"/>
+  <path d="M150 400c8-82 70-128 170-128s162 46 170 128z" fill="#6b5ba8"/>
+  <path d="M286 276c10 22 24 32 34 32s24-10 34-32" fill="#56488b"/>
+  <rect x="294" y="222" width="52" height="64" rx="22" fill="#b07a51"/>
+  <ellipse cx="258" cy="186" rx="11" ry="16" fill="#b07a51"/>
+  <ellipse cx="382" cy="186" rx="11" ry="16" fill="#b07a51"/>
+  <ellipse cx="320" cy="178" rx="62" ry="72" fill="#c68e63"/>
+  
+  <path d="M258 170c0-56 28-86 62-86s62 30 62 86c-14-28-36-42-62-44-26 2-48 16-62 44z" fill="#24201c"/>
+  <path d="M290 168q10-6 20 0M330 168q10-6 20 0" stroke="#24201c" stroke-width="4" fill="none" stroke-linecap="round" opacity=".85"/>
+  <ellipse cx="300" cy="184" rx="5" ry="6" fill="#2a211c"/>
+  <ellipse cx="340" cy="184" rx="5" ry="6" fill="#2a211c"/>
+  <path d="M318 196q-4 14 4 16" stroke="#b07a51" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M304 222q16 12 32 0" stroke="#9b4f43" stroke-width="4" fill="none" stroke-linecap="round"/>
+  </g>
+  <rect width="640" height="400" fill="url(#lp4)"/>
+</svg>

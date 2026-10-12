@@ -5,7 +5,7 @@ const DEFAULT_PLANS = {
   public:   { label: 'Public',   maxPeers: 4, maxMinutes: 60,   monthlyPeerMinutes: 0,      relay: true,  whitelabel: false, api: false },
   free:     { label: 'Free',     maxPeers: 4, maxMinutes: 60,   monthlyPeerMinutes: 3000,   relay: false, whitelabel: false, api: true },
   pro:      { label: 'Pro',      maxPeers: 6, maxMinutes: 480,  monthlyPeerMinutes: 60000,  relay: true,  whitelabel: false, api: true },
-  business: { label: 'Business', maxPeers: 6, maxMinutes: 1440, monthlyPeerMinutes: 500000, relay: true,  whitelabel: true,  api: true },
+  business: { label: 'Business', maxPeers: 8, maxMinutes: 1440, monthlyPeerMinutes: 500000, relay: true,  whitelabel: true,  api: true },
 };
 const HARD_MAX_PEERS = 8; // full-mesh topology stops being reasonable beyond this
 

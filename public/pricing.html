@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pricing | BinaryBond</title>
+  <meta name="description" content="BinaryBond is free for everyday meetings. Paid plans for teams and products that embed private calls.">
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/site.css">
+  <script type="module" src="/js/site.js"></script>
+</head>
+<body>
+  <!--#sprite-->
+  <!--#header-->
+  <main>
+    <section class="page-head">
+      <div class="container">
+        <span class="eyebrow">Pricing</span>
+        <h1>Free for meetings. Simple plans for products.</h1>
+        <p>Anyone can start a private meeting at no cost. Paid plans are for teams and developers who embed BinaryBond in their own apps.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="plans" id="planLimits">
+          <article class="plan" data-plan="public">
+            <h3>Personal</h3>
+            <div class="price">$0</div>
+            <p class="desc">For anyone who wants a private call right now.</p>
+            <a class="btn btn-block" href="/new">Start a meeting</a>
+            <ul>
+              <li><svg class="ic"><use href="#i-check"/></svg><span data-k="peers">Up to 4 people per meeting</span></li>
+              <li><svg class="ic"><use href="#i-check"/></svg><span data-k="length">Meetings up to 1 hour</span></li>
+              <li><svg class="ic"><use href="#i-check"/></svg>End-to-end encryption</li>
+              <li><svg class="ic"><use href="#i-check"/></svg>Chat, files, whiteboard and polls</li>
+            </ul>
+          </article>
+          <article class="plan" data-plan="free">
+            <h3>Developer</h3>
+            <div class="price">$0 <small>/ month</small></div>
+            <p class="desc">Try the API and embed SDK in your own product.</p>
+            <a class="btn btn-block" href="/dashboard">Create a workspace</a>
+            <ul>
+              <li><svg class="ic"><use href="#i-check"/></svg><span data-k="peers">Up to 4 people per meeting</span></li>
+              <li><svg class="ic"><use href="#i-check"/></svg><span data-k="length">Meetings up to 1 hour</span></li>
+              <li><svg class="ic"><use href="#i-check"/></svg><span data-k="minutes">3,000 participant minutes a month</span></li>
+              <li><svg class="ic"><use href="#i-check"/></svg>Session API and webhooks</li>
+            </ul>
+          </article>
+          <article class="plan featured" data-plan="pro">
+            <h3>Pro</h3>
+            <div class="price">$19 <small>/ month</small></div>
+            <p class="desc">For products with real users and longer calls.</p>
+            <a class="btn btn-primary btn-block" href="/dashboard">Upgrade in dashboard</a>
+            <ul>
+              <li><svg class="ic"><use href="#i-check"/></svg><span data-k="peers">Up to 6 people per meeting</span></li>
+              <li><svg class="ic"><use href="#i-check"/></svg><span data-k="length">Meetings up to 8 hours</span></li>
+              <li><svg class="ic"><use href="#i-check"/></svg><span data-k="minutes">60,000 participant minutes a month</span></li>
+              <li><svg class="ic"><use href="#i-check"/></svg>Relay mode to hide IP addresses</li>
+            </ul>
+          </article>
+          <article class="plan" data-plan="business">
+            <h3>Business</h3>
+            <div class="price">$79 <small>/ month</small></div>
+            <p class="desc">Your brand on every call, with room to grow.</p>
+            <a class="btn btn-block" href="/dashboard">Upgrade in dashboard</a>
+            <ul>
+              <li><svg class="ic"><use href="#i-check"/></svg><span data-k="peers">Up to 8 people per meeting</span></li>
+              <li><svg class="ic"><use href="#i-check"/></svg><span data-k="length">Meetings up to 24 hours</span></li>
+              <li><svg class="ic"><use href="#i-check"/></svg><span data-k="minutes">500,000 participant minutes a month</span></li>
+              <li><svg class="ic"><use href="#i-check"/></svg>White-label name, colour and logo</li>
+            </ul>
+          </article>
+        </div>
+        <p class="muted pricing-note">Participant minutes add up the time each person spends in a meeting. A 30-minute call with three people uses 90. Prices in USD, billed monthly through Stripe.</p>
+      </div>
+    </section>
+
+    <section class="section section-alt">
+      <div class="container">
+        <div class="section-head center"><h2>Pricing questions</h2></div>
+        <div class="faq">
+          <details><summary>Is the free meeting tier really free?<svg class="ic"><use href="#i-plus"/></svg></summary><p>Yes. Personal meetings do not require an account, and there are no ads or data sales funding them.</p></details>
+          <details><summary>What happens if I go over my minutes?<svg class="ic"><use href="#i-plus"/></svg></summary><p>Calls already in progress continue. New meetings created with your API key are paused until the next month or until you upgrade. You get webhook warnings at 80% and 100%.</p></details>
+          <details><summary>Can I self-host instead?<svg class="ic"><use href="#i-plus"/></svg></summary><p>Yes. The server is open for self-hosting with Docker. You can configure your own plans and limits.</p></details>
+          <details><summary>How do I cancel?<svg class="ic"><use href="#i-plus"/></svg></summary><p>From the billing portal in your dashboard, at any time. Your workspace moves back to the Developer plan.</p></details>
+        </div>
+      </div>
+    </section>
+  </main>
+  <!--#footer-->
+</body>
+</html>

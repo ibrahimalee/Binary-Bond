@@ -52,8 +52,8 @@ test('safety codes are symmetric and depend on both fingerprints', async () => {
   assert.deepEqual(fa, ['SHA-256 AA:BB:CC']);
   const x = await safetyCode(fa, fb), y = await safetyCode(fb, fa);
   assert.deepEqual(x, y);
-  assert.equal(x.emoji.length, 6);
-  assert.match(x.digits, /^\d{4} \d{4} \d{4}$/);
+  assert.equal(x.groups.length, 4);
+  assert.match(x.digits, /^\d{5} \d{5} \d{5} \d{5}$/);
   const z = await safetyCode(fa, ['SHA-256 11:22:34']);
   assert.notDeepEqual(x, z);
 });

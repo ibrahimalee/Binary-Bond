@@ -1,9 +1,9 @@
 // App-shell service worker. Network-first so deploys take effect immediately;
 // the cache is only an offline fallback. API, websocket and dashboard data are
 // never cached.
-const CACHE = 'bb-shell-v4';
+const CACHE = 'bb-shell-v5';
 const SHELL = [
-  '/', '/css/app.css', '/icon.svg', '/manifest.webmanifest',
+  '/room', '/css/base.css', '/css/room.css', '/icon.svg', '/manifest.webmanifest',
   '/js/app.js', '/js/util.js', '/js/crypto.js', '/js/signaling.js', '/js/mesh.js', '/js/media.js',
   '/js/transfer.js', '/js/chat.js', '/js/panels.js', '/js/ui.js', '/js/qr.js',
   '/js/board.js', '/js/recorder.js', '/js/captions.js', '/js/netcheck.js',
@@ -28,6 +28,6 @@ self.addEventListener('fetch', (e) => {
         caches.open(CACHE).then(c => c.put(e.request, copy));
       }
       return res;
-    }).catch(() => caches.match(e.request, { ignoreSearch: true }).then(r => r || caches.match('/'))),
+    }).catch(() => caches.match(e.request, { ignoreSearch: true }).then(r => r || caches.match('/room'))),
   );
 });

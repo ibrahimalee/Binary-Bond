@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Security | BinaryBond</title>
+  <meta name="description" content="How BinaryBond keeps meetings private: keys that never leave your browser, encrypted signaling, direct connections and verifiable safety numbers.">
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/site.css">
+  <script type="module" src="/js/site.js"></script>
+</head>
+<body>
+  <!--#sprite-->
+  <!--#header-->
+  <main>
+    <section class="page-head">
+      <div class="container">
+        <span class="eyebrow">Security</span>
+        <h1>Private because of how it is built</h1>
+        <p>Most meeting apps ask you to trust their servers. BinaryBond is designed so the server never has what it would need to listen in.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container feature-row">
+        <div class="feature-copy">
+          <h3>The key stays in the link</h3>
+          <p>When you start a meeting, your browser generates 128 random bits and places them after the <code>#</code> in the meeting link. Browsers never include that part of an address in requests, so the key is never transmitted to us.</p>
+          <p>From that key each browser derives three things: a public meeting ID, a membership token and an encryption key. The server learns the ID and keeps only a hash of the token. The encryption key never leaves the device.</p>
+        </div>
+        <div class="feature-media">
+          <figure class="diagram" aria-label="Key derivation diagram">
+            <div class="d-node d-key"><svg class="ic"><use href="#i-key"/></svg><span>Meeting key<small>in the link, after #</small></span></div>
+            <div class="d-arrows"><i></i><i></i><i></i></div>
+            <div class="d-row">
+              <div class="d-node"><span>Meeting ID<small>sent to server</small></span></div>
+              <div class="d-node"><span>Access token<small>server keeps a hash</small></span></div>
+              <div class="d-node d-secret"><span>Encryption key<small>never leaves device</small></span></div>
+            </div>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt">
+      <div class="container">
+        <div class="section-head">
+          <h2>What the server can and cannot see</h2>
+          <p>This is the complete list. There are no analytics, no third-party scripts and no logs of who met whom.</p>
+        </div>
+        <table class="compare">
+          <thead><tr><th>Information</th><th>Visible to BinaryBond</th></tr></thead>
+          <tbody>
+            <tr><td>An opaque meeting ID</td><td class="yes">Yes, to route connections</td></tr>
+            <tr><td>Number of people connected, and when</td><td class="yes">Yes, as aggregate counts</td></tr>
+            <tr><td>Your IP address</td><td class="yes">Yes, while connected, kept in memory only</td></tr>
+            <tr><td>Names, chat messages, polls, whiteboard</td><td class="no">No, encrypted end to end</td></tr>
+            <tr><td>Audio, video, screen shares and files</td><td class="no">No, sent directly between devices</td></tr>
+            <tr><td>The meeting key or link</td><td class="no">No, it never leaves your browser</td></tr>
+            <tr><td>Connection details (SDP, network candidates)</td><td class="no">No, sealed with AES-256-GCM</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="card-grid">
+          <article class="card"><span class="card-ic"><svg class="ic"><use href="#i-lock"/></svg></span><h3>Sealed signaling</h3><p>Handshake messages are encrypted with AES-256-GCM and bound to their sender and recipient, so the server cannot read, forge or redirect them.</p></article>
+          <article class="card"><span class="card-ic"><svg class="ic"><use href="#i-key"/></svg></span><h3>Safety numbers</h3><p>Each pair of participants can compare a 20-digit number derived from both connection certificates. A match proves no one is in between.</p></article>
+          <article class="card"><span class="card-ic"><svg class="ic"><use href="#i-globe"/></svg></span><h3>Relay mode</h3><p>Route media through a TURN relay so other participants cannot see your IP. The relay only ever handles encrypted packets.</p></article>
+          <article class="card"><span class="card-ic"><svg class="ic"><use href="#i-file"/></svg></span><h3>Clean file transfers</h3><p>Files are sent directly, hashed with SHA-256 for integrity, and photos lose their GPS and camera metadata first.</p></article>
+          <article class="card"><span class="card-ic"><svg class="ic"><use href="#i-user-plus"/></svg></span><h3>Access control</h3><p>Waiting rooms, locks and removals are enforced by the server, so a leaked link alone is not enough to get in.</p></article>
+          <article class="card"><span class="card-ic"><svg class="ic"><use href="#i-shield"/></svg></span><h3>Hardened web app</h3><p>Strict Content Security Policy, no third-party code, rate limits on every endpoint and no cookies.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt">
+      <div class="container">
+        <div class="section-head"><h2>Limits worth knowing</h2><p>No system is perfect. These are the trade-offs we have made, stated plainly.</p></div>
+        <ul class="checks">
+          <li><svg class="ic"><use href="#i-info"/></svg>Anyone who has the meeting link can ask to join. Use the waiting room for sensitive meetings and share links privately.</li>
+          <li><svg class="ic"><use href="#i-info"/></svg>In direct calls, other participants can see your IP address. Relay mode prevents this.</li>
+          <li><svg class="ic"><use href="#i-info"/></svg>The server knows that a meeting took place and how many people joined. It cannot know who they were.</li>
+          <li><svg class="ic"><use href="#i-info"/></svg>Large group calls are limited to 8 people because every participant connects to every other.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="cta-band">
+      <div class="container">
+        <div><h2>See it for yourself.</h2><p>Open the security panel in any meeting to view the live connection details.</p></div>
+        <a class="btn btn-primary btn-lg" href="/new">Start a meeting</a>
+      </div>
+    </section>
+  </main>
+  <!--#footer-->
+</body>
+</html>

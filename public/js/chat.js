@@ -3,9 +3,9 @@
 // stored on the server.
 
 import { h, icon, randomId, formatBytes, hueOf, initials } from './util.js';
-import { sound, modal, toast } from './ui.js';
+import { sound, modal, toast, REACTIONS, REACTION_LABELS, reactionIcon } from './ui.js';
 
-const QUICK = ['👍', '❤️', '😂', '😮', '🙏', '🔥'];
+const QUICK = REACTIONS;
 const BURN_REVEAL_MS = 10000;
 const MAX_LEN = 4000;
 const URL_RE = /\bhttps?:\/\/[^\s<>"']+[^\s<>"'.,:;!?)\]]/g;
@@ -24,7 +24,7 @@ export class Chat {
 
   #build() {
     this.list = h('div.chat-list', { role: 'log', 'aria-live': 'polite', 'aria-label': 'Messages' });
-    this.empty = h('div.chat-empty', icon('lock'), h('p', 'Messages are end-to-end encrypted and exist only on participants\' devices. Nothing is stored.'));
+    this.empty = h('div.chat-empty', icon('lock'), h('p', 'Messages are encrypted end to end and are only kept on participants\' devices.'));
     this.list.append(this.empty);
     this.ttlSelect = h('select.select', { 'aria-label': 'Disappearing messages', onchange: () => this.setTtl(Number(this.ttlSelect.value), true) },
       TTL_OPTIONS.map(([v, l]) => h('option', { value: String(v) }, l)));
@@ -38,7 +38,7 @@ export class Chat {
         if (files.length) { e.preventDefault(); this.app.shareFiles(files); }
       },
     });
-    this.burnBtn = h('button.icon-btn', { type: 'button', title: 'Burn after reading', 'aria-pressed': 'false', onclick: () => this.toggleBurn() }, icon('flame'));
+    this.burnBtn = h('button.icon-btn', { type: 'button', title: 'Read-once message', 'aria-pressed': 'false', onclick: () => this.toggleBurn() }, icon('flame'));
     this.fileInput = h('input', { type: 'file', multiple: true, hidden: true, onchange: () => { this.app.shareFiles([...this.fileInput.files]); this.fileInput.value = ''; } });
     this.sendBtn = h('button.send-btn', { type: 'button', 'aria-label': 'Send', disabled: true, onclick: () => this.send() }, icon('send'));
     this.el = h('div.side-body-inner.chat',
@@ -66,7 +66,7 @@ export class Chat {
     this.burnNext = !this.burnNext;
     this.burnBtn.classList.toggle('on', this.burnNext);
     this.burnBtn.setAttribute('aria-pressed', String(this.burnNext));
-    this.input.placeholder = this.burnNext ? 'Burn-after-reading message…' : 'Message everyone…';
+    this.input.placeholder = this.burnNext ? 'Read-once message…' : 'Message everyone…';
   }
 
   setTtl(ttl, local) {
@@ -84,7 +84,7 @@ export class Chat {
   send() {
     const text = this.input.value.trim().slice(0, MAX_LEN);
     if (!text) return;
-    if (!this.app.peerCount()) { this.system('Nobody else is here yet. Messages are never stored, so this one would be lost.', 'info'); return; }
+    if (!this.app.peerCount()) { this.system('Nobody else is here yet. Messages aren\'t stored, so this one would be lost.', 'info'); return; }
     const msg = { type: 'chat', id: randomId(8), text, ts: Date.now(), ttl: this.ttl, burn: this.burnNext };
     this.app.broadcast(msg);
     this.#add({ ...msg, from: 'me', name: 'You' });
@@ -122,7 +122,7 @@ export class Chat {
       }
       case 'chat-burned': {
         const msg = this.messages.get(m.id);
-        if (msg && msg.from === 'me') { msg.burnedBy = (msg.burnedBy || 0) + 1; msg.footNote.textContent = `🔥 Read & burned${msg.burnedBy > 1 ? ` ×${msg.burnedBy}` : ''}`; }
+        if (msg && msg.from === 'me') { msg.burnedBy = (msg.burnedBy || 0) + 1; msg.footNote.textContent = `Read and deleted${msg.burnedBy > 1 ? ` (${msg.burnedBy})` : ''}`; }
         break;
       }
       case 'chat-ttl': {
@@ -171,7 +171,7 @@ export class Chat {
       bubble.classList.add('burn');
       bubble.tabIndex = 0;
       bubble.setAttribute('role', 'button');
-      bubble.append(icon('flame'), 'Tap to reveal · burns after 10s');
+      bubble.append(icon('eye'), 'Read-once message. Tap to view');
       const reveal = () => this.#revealBurn(msg);
       bubble.addEventListener('click', reveal, { once: true });
       bubble.addEventListener('keydown', (e) => { if (e.key === 'Enter') reveal(); });
@@ -185,7 +185,7 @@ export class Chat {
   #tools(msg) {
     const mine = msg.from === 'me';
     const tools = h('div.msg-tools');
-    for (const e of QUICK.slice(0, 4)) tools.append(h('button', { type: 'button', title: `React ${e}`, onclick: () => this.#react(msg, e) }, e));
+    for (const e of QUICK.slice(0, 4)) tools.append(h('button', { type: 'button', title: REACTION_LABELS[e], 'aria-label': REACTION_LABELS[e], onclick: () => this.#react(msg, e) }, reactionIcon(e)));
     if (mine) tools.append(h('button', { type: 'button', title: 'Unsend for everyone', onclick: () => { this.app.broadcast({ type: 'chat-del', id: msg.id }); this.#markDeleted(msg); } }, icon('trash')));
     else if (!msg.burn) tools.append(h('button', { type: 'button', title: 'Copy', onclick: () => navigator.clipboard.writeText(msg.text).catch(() => {}) }, icon('copy')));
     return tools;
@@ -205,7 +205,7 @@ export class Chat {
     host.replaceChildren();
     for (const [emoji, set] of msg.reactions) {
       if (!set.size) continue;
-      host.append(h(`button.msg-react${set.has('me') ? '.mine' : ''}`, { type: 'button', onclick: () => this.#react(msg, emoji) }, emoji, h('span', String(set.size))));
+      host.append(h(`button.msg-react${set.has('me') ? '.mine' : ''}`, { type: 'button', title: REACTION_LABELS[emoji], onclick: () => this.#react(msg, emoji) }, reactionIcon(emoji), h('span', String(set.size))));
     }
   }
 
@@ -215,14 +215,14 @@ export class Chat {
     renderRich(msg.bubble, msg.text);
     let left = BURN_REVEAL_MS / 1000;
     const foot = msg.el.querySelector('.msg-foot');
-    const counter = h('span', `🔥 ${left}s`);
+    const counter = h('span', `Deletes in ${left}s`);
     foot.append(counter);
-    const iv = setInterval(() => { left--; counter.textContent = `🔥 ${left}s`; }, 1000);
+    const iv = setInterval(() => { left--; counter.textContent = `Deletes in ${left}s`; }, 1000);
     setTimeout(() => {
       clearInterval(iv);
       this.app.sendTo(msg.from, { type: 'chat-burned', id: msg.id });
       msg.text = '';
-      msg.bubble.replaceChildren(icon('flame'), ' Burned');
+      msg.bubble.replaceChildren('Message deleted after reading');
       msg.bubble.classList.add('deleted');
       foot.replaceChildren();
     }, BURN_REVEAL_MS);
@@ -300,7 +300,7 @@ export class Chat {
     const card = msg.card;
     card.querySelector('.progress')?.remove();
     const sub = card.querySelector('.file-sub');
-    sub.replaceChildren(formatBytes(size), verified === true ? h('span.ok', '· ✓ verified') : verified === false ? h('span.bad', '· ✗ integrity check failed') : null);
+    sub.replaceChildren(formatBytes(size), verified === true ? h('span.ok', '· Verified') : verified === false ? h('span.bad', '· Failed integrity check') : null);
     if (/^image\/(png|jpeg|gif|webp)$/.test(mime) && verified !== false) card.append(h('img.file-preview', { src: url, alt: name }));
     card.append(h('div.file-actions', h('a.btn.btn-primary', { href: url, download: name }, icon('download'), 'Save')));
   }
@@ -325,7 +325,7 @@ export class Chat {
       title: 'Create a poll',
       body: h('div', h('label.field', h('span.field-label', 'Question'), q), h('span.field-label', 'Options'), opts,
         h('button.btn.btn-ghost.btn-sm', { type: 'button', onclick: () => addOpt() }, icon('user-plus'), 'Add option'),
-        h('p.field-hint', icon('lock'), 'End-to-end encrypted. Results show counts only, never who voted for what.')),
+        h('p.field-hint', icon('lock'), 'Results show vote counts only, not who voted for what.')),
       actions: [{
         label: 'Post poll', kind: 'btn-primary', run: () => {
           const options = [...opts.querySelectorAll('input')].map(i => i.value.trim()).filter(Boolean);

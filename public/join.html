@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Join a meeting | BinaryBond</title>
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/site.css">
+  <script type="module" src="/js/site.js"></script>
+  <script type="module" src="/js/join.js"></script>
+</head>
+<body>
+  <!--#sprite-->
+  <!--#header-->
+  <main class="auth-page">
+    <div class="auth-card">
+      <h1>Join a meeting</h1>
+      <p>Paste the link you were sent, or meet with a shared passphrase.</p>
+      <div class="tabs" role="tablist">
+        <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="link">Meeting link</button>
+        <button class="tab" type="button" role="tab" aria-selected="false" data-tab="pass">Passphrase</button>
+      </div>
+
+      <form id="linkForm" data-panel="link">
+        <label class="field">
+          <span class="field-label">Meeting link or key</span>
+          <input class="input" id="linkInput" autocomplete="off" spellcheck="false" placeholder="https://.../room#..." required autofocus>
+        </label>
+        <p class="field-error" id="linkError" hidden>That doesn't look like a BinaryBond meeting link.</p>
+        <button class="btn btn-primary btn-lg btn-block" type="submit">Continue</button>
+      </form>
+
+      <form id="passForm" data-panel="pass" hidden>
+        <label class="field">
+          <span class="field-label">Meeting name</span>
+          <input class="input" id="passRoom" autocomplete="off" spellcheck="false" placeholder="e.g. sunday-standup" required>
+        </label>
+        <label class="field">
+          <span class="field-label">Passphrase</span>
+          <input class="input" id="passPhrase" type="password" autocomplete="off" minlength="8" placeholder="At least 8 characters" required>
+        </label>
+        <p class="field-hint"><svg class="ic"><use href="#i-info"/></svg>Everyone enters the same name and passphrase. Nothing is sent until you join, and the passphrase never leaves your device.</p>
+        <p class="field-error" id="passError" hidden></p>
+        <button class="btn btn-primary btn-lg btn-block" type="submit" id="passBtn">Continue</button>
+      </form>
+
+      <div class="divider">or</div>
+      <a class="btn btn-block" href="/new"><svg class="ic"><use href="#i-plus"/></svg>Start a new meeting</a>
+    </div>
+  </main>
+</body>
+</html>

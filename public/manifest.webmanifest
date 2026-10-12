@@ -1,14 +1,24 @@
 {
-  "name": "BinaryBond — Private calls",
+  "name": "BinaryBond",
   "short_name": "BinaryBond",
-  "description": "End-to-end encrypted peer-to-peer video, voice, chat and file sharing.",
-  "start_url": "/",
+  "description": "Private, encrypted video meetings.",
+  "start_url": "/new",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#07080f",
-  "theme_color": "#07080f",
+  "background_color": "#0f1115",
+  "theme_color": "#1f5ae0",
   "icons": [
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
   ]
 }

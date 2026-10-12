@@ -1,7 +1,7 @@
 // Operator console: live health, tenants, plans and keys.
 
 import { $, h, icon } from './util.js';
-import { toast, applyTheme, confirmDialog, modal } from './ui.js';
+import { toast, confirmDialog, modal } from './ui.js';
 import { api, barChart, fmtNum, fmtDate, revealSecret } from './console.js';
 
 const KEY = 'bb:adminToken';
@@ -9,7 +9,6 @@ const root = $('#root');
 let token = sessionStorage.getItem(KEY);
 let timer = null;
 
-applyTheme();
 $('#signOut').addEventListener('click', () => { sessionStorage.removeItem(KEY); token = null; clearInterval(timer); toggleChrome(false); login(); });
 $('#refresh').addEventListener('click', () => load());
 if (token) load(); else login();

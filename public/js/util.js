@@ -39,7 +39,7 @@ export class Emitter {
 }
 
 export function formatBytes(n) {
-  if (!Number.isFinite(n)) return '—';
+  if (!Number.isFinite(n)) return 'n/a';
   const u = ['B', 'KB', 'MB', 'GB'];
   let i = 0;
   while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }

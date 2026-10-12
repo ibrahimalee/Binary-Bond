@@ -2,62 +2,76 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Privacy — BinaryBond</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy policy | BinaryBond</title>
   <meta name="referrer" content="no-referrer">
-  <meta name="color-scheme" content="dark light">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/css/app.css">
-  <link rel="stylesheet" href="/css/console.css">
-  <script type="module" src="/js/static-page.js"></script>
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/site.css">
+  <script type="module" src="/js/site.js"></script>
 </head>
 <body>
   <!--#sprite-->
-  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
-  <nav class="topnav">
-    <a class="brand" href="/"><svg class="brand-mark"><use href="#i-logo"/></svg><span class="brand-name">BinaryBond</span></a>
-    <div class="topnav-links"><a href="/">App</a><a href="/docs">Developers</a></div>
-    <div class="topnav-actions"><a class="btn btn-primary btn-sm" href="/">Start a call</a></div>
-  </nav>
-  <article class="prose">
-    <h1>Privacy, in plain words</h1>
-    <p>BinaryBond is designed so that we can't learn much about you even if we wanted to. This page explains exactly what the server handles, what it keeps, and what it never sees.</p>
+  <!--#header-->
+  <main>
+    <section class="page-head">
+      <div class="container">
+        <h1>Privacy policy</h1>
+        <p>Last updated October 2026. This page explains what BinaryBond handles, what it keeps and what it never receives.</p>
+      </div>
+    </section>
+    <div class="container prose-wrap">
+      <nav class="toc" aria-label="On this page">
+        <strong>On this page</strong>
+        <a href="#summary">Summary</a>
+        <a href="#never">What we never receive</a>
+        <a href="#handle">What we handle</a>
+        <a href="#keep">What we keep</a>
+        <a href="#ip">IP addresses</a>
+        <a href="#third">Third parties</a>
+        <a href="#device">Your device</a>
+        <a href="#rights">Your rights</a>
+      </nav>
+      <article class="prose">
+        <h2 id="summary">Summary</h2>
+        <p>Meetings on BinaryBond do not require an account. We do not use cookies, analytics or advertising, and we do not load code from other companies. Meeting content travels directly between participants' devices and is encrypted end to end.</p>
 
-    <div class="callout"><svg class="ic"><use href="#i-shield"/></svg><p><strong>Short version:</strong> no accounts for callers, no cookies, no analytics, no third-party scripts, no recordings. Calls, messages and files go directly between participants' devices, end-to-end encrypted.</p></div>
+        <h2 id="never">What we never receive</h2>
+        <ul>
+          <li>Audio, video and screen shares</li>
+          <li>Chat messages, polls, whiteboard drawings and files</li>
+          <li>Display names, which are encrypted with the meeting key</li>
+          <li>The meeting key or the full meeting link</li>
+          <li>Connection details such as session descriptions and network candidates</li>
+        </ul>
 
-    <h2>What never reaches the server</h2>
-    <ul>
-      <li>Your audio, video and screen shares.</li>
-      <li>Chat messages, reactions and files.</li>
-      <li>Your display name (it is encrypted with the room key).</li>
-      <li>The room key or the invite link. Browsers don't send the part after <code>#</code> to servers.</li>
-      <li>Connection details such as SDP offers and network candidates (sealed with AES-256-GCM).</li>
-    </ul>
+        <h2 id="handle">What we handle while you are connected</h2>
+        <ul>
+          <li>A meeting ID derived one way from the meeting key, and a hash of a membership token</li>
+          <li>Encrypted handshake messages, which are passed on and discarded immediately</li>
+          <li>Your IP address, held in memory for the length of the connection for rate limiting</li>
+        </ul>
 
-    <h2>What the server handles while you're connected</h2>
-    <ul>
-      <li>A room ID derived one-way from your room key, and a hash of a membership token.</li>
-      <li>Your IP address, for the duration of the WebSocket connection, because that's how the internet works. It's used in memory for rate limiting and isn't written to disk or logs.</li>
-      <li>Encrypted signaling messages, which are relayed and immediately discarded.</li>
-    </ul>
+        <h2 id="keep">What we keep</h2>
+        <ul>
+          <li>Daily totals: meetings created, participant minutes and largest meeting size. These are not linked to meetings, people or addresses.</li>
+          <li>For developer workspaces: name, contact email, a hash of the API key, plan, branding, webhook URL and allowed sites.</li>
+        </ul>
 
-    <h2>What the server keeps</h2>
-    <ul>
-      <li>Daily totals: how many rooms were created, how many participant-minutes were used, and peak room size. There is no link to rooms, people or IPs.</li>
-      <li>For developer workspaces only: workspace name, contact email, a SHA-256 hash of the API key, plan, branding, webhook URL and allowed domains.</li>
-    </ul>
+        <h2 id="ip">IP addresses and direct connections</h2>
+        <p>In a direct call, the other participants' devices can see your IP address, as with any peer-to-peer application. If you turn on relay mode, your audio and video pass through a relay server that only handles encrypted packets, and other participants cannot see your address.</p>
 
-    <h2>Peer-to-peer and your IP address</h2>
-    <p>When devices connect directly, the other participants in your call can see your IP address, the same as in any peer-to-peer app. If that's a concern, turn on <strong>Hide my IP</strong> (when the server offers a relay). Your media then goes through a TURN relay that only sees encrypted packets.</p>
+        <h2 id="third">Third parties</h2>
+        <p>Your browser may contact a STUN server to find a direct route between devices. Operators can run their own so no outside party is involved. If a workspace buys a paid plan, payment is handled by Stripe on Stripe's own pages and is subject to Stripe's privacy policy.</p>
 
-    <h2>Third parties</h2>
-    <p>The app loads nothing from other domains: no fonts, no CDNs, no analytics. To find a direct route between devices, browsers may contact a STUN server. Operators can run their own (BinaryBond includes one) so that no outside party is involved. If a workspace uses paid plans, billing is processed by Stripe on Stripe's own pages.</p>
+        <h2 id="device">Data on your device</h2>
+        <p>Your settings, such as name, devices and theme, are saved in your browser. The current meeting key is kept in session storage and disappears when the tab closes. The panic shortcut (<kbd>Shift</kbd> + <kbd>Esc</kbd>) deletes all of it immediately.</p>
 
-    <h2>Local storage on your device</h2>
-    <p>Your preferences (theme, name, devices, filters) are stored in your browser. The current room key is kept in session storage, which disappears when you close the tab. <strong>Panic wipe</strong> (<kbd>Shift</kbd>+<kbd>Esc</kbd>) erases all of it instantly.</p>
-
-    <h2>Your rights</h2>
-    <p>Because callers have no accounts and no personal data is stored, there's normally nothing to access or delete. Developer workspaces can be deleted on request by the server operator, which removes the workspace record permanently.</p>
-  </article>
+        <h2 id="rights">Your rights</h2>
+        <p>Because people joining meetings do not have accounts and we do not store personal data about them, there is usually nothing for us to access, correct or delete. Developer workspaces can be deleted at any time on request.</p>
+      </article>
+    </div>
+  </main>
+  <!--#footer-->
 </body>
 </html>

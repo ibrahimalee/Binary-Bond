@@ -8,26 +8,26 @@ import { Media, LevelMeter, audioContext } from './media.js';
 import { Transfers, stripMetadata } from './transfer.js';
 import { Chat, avatarEl } from './chat.js';
 import { peoplePanel, securityPanel, settingsPanel } from './panels.js';
-import { toast, modal, confirmDialog, popover, sound, applyTheme, copyText } from './ui.js';
+import { toast, modal, confirmDialog, popover, sound, copyText, REACTIONS, REACTION_LABELS, reactionIcon } from './ui.js';
 import { qrSvg } from './qr.js';
 import { Board } from './board.js';
 import { Recorder } from './recorder.js';
 import { Captions } from './captions.js';
 import { runNetworkCheck } from './netcheck.js';
 
-const REACTIONS = ['👍', '👏', '😂', '❤️', '🎉', '😮', '🤔', '👋'];
+
 const DENY_TEXT = {
-  auth: 'That link is not valid for this room.', locked: 'This room is locked by the host.', full: 'This room is full.',
-  kicked: 'You were removed from the call by the host.', rejected: 'The host declined your request to join.',
+  auth: 'This meeting link isn\'t valid.', locked: 'This meeting has been locked by the host.', full: 'This meeting is full.',
+  kicked: 'The host removed you from the meeting.', rejected: 'The host didn\'t let you in.',
   timeout: 'Nobody let you in. Try again later.', token: 'This session token is invalid or has expired.',
   quota: 'This workspace has used its monthly minutes.', capacity: 'The server is at capacity. Please try again shortly.',
   'rate-limited': 'Too many attempts. Wait a minute and try again.', busy: 'The waiting room is full right now.',
-  invalid: 'That room link is not valid.', network: 'Could not reach the server. Check your connection.',
+  invalid: 'This meeting link isn\'t valid.', network: 'Could not reach the server. Check your connection.',
 };
 const END_TEXT = {
-  'host-ended': 'The host ended the call for everyone.', expired: 'This room reached its time limit and was closed.',
+  'host-ended': 'The host ended the meeting for everyone.', expired: 'This meeting reached its time limit.',
   'server-shutdown': 'The server restarted. You can rejoin in a moment.',
-  'self-destruct': 'The room self-destructed on schedule. Nothing from it remains on the server.',
+  'self-destruct': 'The meeting closed at its scheduled time.',
 };
 const cleanName = (n) => String(n || '').replace(/[\u0000-\u001f‪-‮⁦-⁩]/g, '').trim().slice(0, 40) || 'Guest';
 
@@ -63,8 +63,6 @@ class App {
   // boot
   // ===========================================================================
   async init() {
-    applyTheme();
-    this.#wireHome();
     this.#wireLobby();
     this.#wireCall();
     this.#wireMedia();
@@ -73,17 +71,20 @@ class App {
     try { this.cfg = await (await fetch('/api/config', { cache: 'no-store' })).json(); } catch { this.cfg = null; }
     this.#applyConfig();
     if (this.isEmbed) await this.#applyEmbed();
-    window.addEventListener('hashchange', () => this.route());
     this.route();
     if ('serviceWorker' in navigator && !this.isEmbed) navigator.serviceWorker.register('/sw.js').catch(() => {});
   }
 
+  // The meeting key arrives in the URL fragment (from /new, /join or an invite
+  // link). A refresh falls back to the key kept in this tab's session storage.
   route() {
     const fromHash = location.hash.slice(1);
     const saved = sessionStorage.getItem('bb:session');
-    if (this.view !== 'home') return;
-    if (isSecret(fromHash)) this.openLobby(fromHash, false);
-    else if (isSecret(saved)) this.openLobby(saved, sessionStorage.getItem('bb:creator') === '1');
+    const creator = sessionStorage.getItem('bb:creator') === '1';
+    if (isSecret(fromHash)) this.openLobby(fromHash, creator && fromHash === saved);
+    else if (isSecret(saved)) this.openLobby(saved, creator);
+    else if (this.isEmbed) location.replace(`/embed${location.search}#${newSecret()}`);
+    else location.replace('/join');
   }
 
   showView(name) {
@@ -97,7 +98,7 @@ class App {
   #applyConfig() {
     const plan = this.cfg?.plans?.public || { maxPeers: 4 };
     const sel = $('#optMax');
-    sel.replaceChildren(...Array.from({ length: plan.maxPeers - 1 }, (_, i) => i + 2).map(n => h('option', { value: String(n), selected: n === plan.maxPeers }, n === 2 ? '2 (one-to-one)' : String(n))));
+    sel.replaceChildren(...Array.from({ length: plan.maxPeers - 1 }, (_, i) => i + 2).map(n => h('option', { value: String(n), selected: n === plan.maxPeers }, n === 2 ? '2 people' : `${n} people`)));
     $('#optRelayRow').hidden = !this.cfg?.turn;
   }
 
@@ -107,7 +108,7 @@ class App {
     try {
       const { brand } = await (await fetch(`/api/brand?token=${encodeURIComponent(this.token)}`)).json();
       if (!brand) return;
-      if (brand.accent) { document.documentElement.style.setProperty('--accent', brand.accent); document.documentElement.style.setProperty('--accent-2', brand.accent); }
+      if (brand.accent) for (const v of ['--primary', '--primary-hover', '--primary-press']) document.body.style.setProperty(v, brand.accent);
       if (brand.name) { $$('.brand-name').forEach(e => { e.textContent = brand.name; }); document.title = brand.name; }
       if (brand.logoUrl) $$('.brand-mark').forEach(e => e.replaceWith(h('img.brand-logo', { src: brand.logoUrl, alt: '' })));
     } catch { /* fall back to default branding */ }
@@ -117,53 +118,10 @@ class App {
     if (this.isEmbed && window.parent !== window) window.parent.postMessage({ source: 'binarybond', type, ...data }, '*');
   }
 
-  // ===========================================================================
-  // home
-  // ===========================================================================
-  #wireHome() {
-    for (const tab of $$('#startCard .tab')) {
-      tab.addEventListener('click', () => {
-        for (const t of $$('#startCard .tab')) { t.classList.toggle('active', t === tab); t.setAttribute('aria-selected', String(t === tab)); }
-        for (const p of $$('#startCard .tab-panel')) p.hidden = p.dataset.panel !== tab.dataset.tab;
-        $(`#startCard [data-panel="${tab.dataset.tab}"] input`)?.focus();
-      });
-    }
-    $('#newRoomBtn').addEventListener('click', () => this.openLobby(newSecret(), true));
-    $('#joinLinkForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const v = $('#joinLinkInput').value.trim();
-      let secret = v.replace(/^#/, '');
-      try { secret = new URL(v).hash.slice(1); } catch { /* raw key */ }
-      if (!isSecret(secret)) return toast('That doesn\'t look like a BinaryBond link or room key.', { type: 'warn' });
-      this.openLobby(secret, false);
-    });
-    $('#passForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = $('#passBtn');
-      btn.classList.add('loading');
-      try {
-        const secret = await secretFromPassphrase($('#passRoom').value, $('#passPhrase').value);
-        $('#passPhrase').value = '';
-        this.openLobby(secret, false);
-      } catch (err) { toast(err.message, { type: 'warn' }); } finally { btn.classList.remove('loading'); }
-    });
-    $('#themeBtn').addEventListener('click', () => {
-      const dark = getComputedStyle(document.documentElement).colorScheme.includes('dark');
-      applyTheme(dark ? 'light' : 'dark');
-      this.#syncThemeIcon();
-    });
-    this.#syncThemeIcon();
-  }
-
-  #syncThemeIcon() {
-    const dark = getComputedStyle(document.documentElement).colorScheme.includes('dark');
-    $('#themeBtn').replaceChildren(icon(dark ? 'sun' : 'moon'));
-  }
-
-  inviteLink() { return `${location.origin}${this.isEmbed ? '/embed' : '/'}#${this.secret}`; }
+  inviteLink() { return `${location.origin}${this.isEmbed ? '/embed' : '/room'}#${this.secret}`; }
 
   syncAddressBar() {
-    if (!this.secret || this.view === 'home' || this.view === 'ended') return;
+    if (!this.secret || this.view === 'ended') return;
     const base = location.pathname + location.search;
     history.replaceState(null, '', store.get('hideLink', true) ? base : `${base}#${this.secret}`);
   }
@@ -179,20 +137,21 @@ class App {
     sessionStorage.setItem('bb:creator', creator ? '1' : '0');
     this.showView('lobby');
     this.syncAddressBar();
-    $('#lobbyTitle').textContent = creator ? 'Your private room is ready' : 'Ready to join?';
-    $('#lobbySub').textContent = creator ? 'Check your camera and mic, then invite people with the link below.' : 'Your camera and mic stay on this device until you join.';
-    $('#joinBtn').textContent = creator ? 'Start call' : 'Join now';
+    $('#lobbyTitle').textContent = creator ? 'Your meeting is ready' : 'Ready to join?';
+    $('#lobbySub').textContent = creator ? 'Check your camera and microphone, then share the meeting link.' : 'Your camera and microphone stay on this device until you join.';
+    $('#joinBtn').textContent = creator ? 'Start meeting' : 'Join now';
+    $('#hostOpts').hidden = !creator;
     $('#joinBtn').classList.remove('loading');
     $('#lobbyInvite').hidden = false;
     $('#lobbyLink').value = this.inviteLink();
     $('#nameInput').value = this.me.name;
     this.#updateLobbyAvatar();
     if (!this.media.rawAudio && !this.media.rawVideo) {
-      $('#previewStatus').textContent = 'Requesting camera & microphone…';
+      $('#previewStatus').textContent = 'Waiting for camera and microphone access';
       const r = await this.media.start();
       $('#previewStatus').textContent = r.audio || r.video ? '' : r.error === 'NotAllowedError'
-        ? 'Camera and mic are blocked. You can still join to chat and share files.'
-        : 'No camera or microphone found. You can still chat and share files.';
+        ? 'Camera and microphone are blocked. You can still join to chat and share files.'
+        : 'No camera or microphone found. You can still join to chat and share files.';
     }
     this.#refreshLobby();
     this.#startLobbyMeter();
@@ -200,17 +159,17 @@ class App {
   }
 
   #wireLobby() {
-    $('#lobbyBack').addEventListener('click', () => this.goHome());
+    $('#lobbyBack').addEventListener('click', () => { this.teardown(); this.media.stop(); sessionStorage.removeItem('bb:session'); });
     $('#lobbyMic').addEventListener('click', () => { this.media.setMic(!this.media.micOn); this.#refreshLobby(); });
     $('#lobbyCam').addEventListener('click', async () => { await this.media.setCam(!this.media.camOn); this.#refreshLobby(); });
-    $('#lobbySettings').addEventListener('click', () => modal({ title: 'Devices & filters', body: settingsPanel(this, { inCall: false }), wide: true }));
+    $('#lobbySettings').addEventListener('click', () => modal({ title: 'Audio and video', body: settingsPanel(this, { inCall: false }), wide: true }));
     $('#nameInput').addEventListener('input', () => this.#updateLobbyAvatar());
     $('#nameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') this.join(); });
     $('#joinBtn').addEventListener('click', () => this.join());
-    $('#lobbyCopy').addEventListener('click', () => copyText(this.inviteLink(), 'Invite link copied'));
+    $('#lobbyCopy').addEventListener('click', () => copyText(this.inviteLink(), 'Meeting link copied'));
     $('#lobbyQr').addEventListener('click', () => this.inviteModal());
     $('#netCheckBtn').addEventListener('click', async () => {
-      const body = h('div.check-wait', h('span.spinner'), 'Testing signaling, NAT traversal and devices…');
+      const body = h('div.check-wait', h('span.spinner'), 'Checking the server, your network and your devices');
       const dlg = modal({ title: 'Connection check', body });
       const result = await runNetworkCheck({ stun: this.cfg?.stun, media: this.media });
       body.replaceWith(result);
@@ -252,7 +211,7 @@ class App {
 
   async setVideoFx(v) {
     await this.media.setPref('videoFx', v);
-    if (v !== 'none') toast(v === 'blur' ? 'Your video is blurred before it leaves this device.' : 'Your video is pixelated before it leaves this device.', { type: 'success', timeout: 2600 });
+    if (v !== 'none') toast(v === 'blur' ? 'Your camera is blurred on this device before it is sent.' : 'Your camera is pixelated on this device before it is sent.', { type: 'success', timeout: 2600 });
     this.#refreshLobby();
     this.refreshSelfTile();
   }
@@ -268,9 +227,7 @@ class App {
     this.media.stop();
     sessionStorage.removeItem('bb:session');
     sessionStorage.removeItem('bb:creator');
-    history.replaceState(null, '', location.pathname + location.search);
-    this.secret = null;
-    this.showView('home');
+    location.href = this.isEmbed ? `/embed${location.search}` : '/new';
   }
 
   // ===========================================================================
@@ -350,9 +307,9 @@ class App {
     });
     sig.on('tamper', () => { if (!this.tamperWarned) { this.tamperWarned = true; toast('A signaling message failed authentication and was dropped.', { type: 'error', timeout: 8000 }); } });
     sig.on('denied', (reason) => {
-      if (this.view === 'call' || this.view === 'waiting') this.#ended(DENY_TEXT[reason] || 'You were disconnected.', reason === 'kicked' ? 'Removed from the call' : 'Couldn\'t join');
+      if (this.view === 'call' || this.view === 'waiting') this.#ended(DENY_TEXT[reason] || 'You were disconnected.', reason === 'kicked' ? 'Removed from the meeting' : 'Couldn\'t join');
     });
-    sig.on('ended', (reason) => this.#ended(this.endedByMe ? 'You ended the call for everyone.' : END_TEXT[reason] || 'The call has ended.', 'Call ended'));
+    sig.on('ended', (reason) => this.#ended(this.endedByMe ? 'You ended the meeting for everyone.' : END_TEXT[reason] || 'The meeting has ended.', 'Meeting ended'));
     sig.on('disconnected', () => { if (this.view === 'call') $('#netPill').hidden = false; });
     sig.on('reconnected', () => { $('#netPill').hidden = true; });
   }
@@ -373,7 +330,7 @@ class App {
       this.#createTile('me', true);
       this.#startLoops();
       this.#wakeLock(true);
-      this.chat.system(m.peers.length ? 'You joined the call' : 'You\'re the first one here. Share the invite link to bring others in.', 'shield');
+      this.chat.system(m.peers.length ? 'You joined the meeting' : 'You\'re the first one here. Share the meeting link to invite others.', 'lock');
       if (!m.peers.length && !this.isEmbed) setTimeout(() => { if (!this.peers.size && this.view === 'call') this.inviteModal(); }, 600);
     }
     $('#lockPill').hidden = !m.locked;
@@ -462,7 +419,7 @@ class App {
       case 'state': {
         const wasHand = p.info.hand;
         p.info = { name: cleanName(m.name), mic: Boolean(m.mic), cam: Boolean(m.cam), screen: Boolean(m.screen), hand: Boolean(m.hand) };
-        if (p.info.hand && !wasHand) { p.handAt = Date.now(); sound('hand'); toast(`${p.info.name} raised their hand ✋`, { timeout: 3500 }); this.notify('Hand raised', `${p.info.name} raised their hand.`); }
+        if (p.info.hand && !wasHand) { p.handAt = Date.now(); sound('hand'); toast(`${p.info.name} raised their hand`, { timeout: 3500 }); this.notify('Hand raised', `${p.info.name} raised their hand.`); }
         if (p.info.screen && !this.pinned && this.layout === 'auto') this.pinned = id;
         if (!p.info.screen && this.pinned === id && this.autoPinned) this.pinned = null;
         this.autoPinned = p.info.screen;
@@ -570,7 +527,7 @@ class App {
     const st = p.pc.connectionState;
     if (t.status) {
       t.status.hidden = st === 'connected';
-      t.status.textContent = st === 'failed' ? 'Connection lost — retrying…' : st === 'disconnected' ? 'Reconnecting…' : 'Connecting…';
+      t.status.textContent = st === 'failed' ? 'Connection lost, retrying…' : st === 'disconnected' ? 'Reconnecting…' : 'Connecting…';
     }
     this.#paintTile(t, { id, ...p.info, hasVideo, verified: p.verified, quality: p.lastStats?.quality });
   }
@@ -700,20 +657,21 @@ class App {
     });
     for (const t of $$('#sidepanel .tab')) t.addEventListener('click', () => this.openSide(t.dataset.side));
     $('#reactBtn').addEventListener('click', (e) => {
-      const row = h('div.emoji-row', REACTIONS.map(emo => h('button', { type: 'button', 'aria-label': `React ${emo}`, onclick: () => { close(); this.react(emo); } }, emo)));
+      const row = h('div.react-row', REACTIONS.map(r => h('button', { type: 'button', title: REACTION_LABELS[r], 'aria-label': REACTION_LABELS[r], onclick: () => { close(); this.react(r); } }, reactionIcon(r))));
       const close = popover(e.currentTarget, [{ custom: row }]);
     });
     $('#moreBtn').addEventListener('click', (e) => this.#moreMenu(e.currentTarget));
     $('#leaveBtn').addEventListener('click', (e) => {
       if (this.isHost() && this.peers.size) {
         popover(e.currentTarget, [
-          { label: 'Leave call', icon: 'log-out', run: () => this.leave() },
-          { label: 'End call for everyone', icon: 'trash', danger: true, run: () => this.endForAll() },
+          { label: 'Leave meeting', icon: 'log-out', run: () => this.leave() },
+          { label: 'End meeting for everyone', icon: 'trash', danger: true, run: () => this.endForAll() },
         ], { align: 'end' });
       } else this.leave();
     });
     $('#rejoinBtn').addEventListener('click', () => { if (this.secret) this.openLobby(this.secret, false); else this.goHome(); });
     $('#homeBtn').addEventListener('click', () => this.goHome());
+    $('#homeBtn').textContent = this.isEmbed ? 'Start a new meeting' : 'Start a new meeting';
 
     const stage = $('#stage');
     let dragDepth = 0;
@@ -767,7 +725,7 @@ class App {
 
   #flyReaction(emoji, name) {
     const layer = $('#reactionsLayer');
-    const el = h('div.flying', emoji, h('small', name));
+    const el = h('div.flying', h('span.bubble-ic', reactionIcon(emoji)), h('small', name));
     el.style.left = `${10 + Math.random() * 75}%`;
     el.style.setProperty('--dx', `${Math.round((Math.random() - 0.5) * 120)}px`);
     layer.append(el);
@@ -811,8 +769,8 @@ class App {
       { label: 'Share screen', icon: 'screen', run: () => this.toggleScreen(), hint: 'S' },
       { label: this.board.open ? 'Hide whiteboard' : 'Whiteboard', icon: 'pen', run: () => this.toggleBoard(!this.board.open), hint: 'W' },
       { label: 'Create a poll', icon: 'chart', run: () => { this.openSide('chat'); this.chat.pollDialog(); } },
-      { label: this.captions.wanted ? 'Turn off captions' : 'Live captions (on-device)', icon: 'chat', run: () => this.toggleCaptions() },
-      { label: this.recorder.recording ? `Stop recording (${this.recorder.elapsed()})` : 'Record with everyone\'s consent', icon: 'activity', run: () => this.toggleRecording(), danger: this.recorder.recording },
+      { label: this.captions.wanted ? 'Turn off captions' : 'Turn on captions', icon: 'chat', run: () => this.toggleCaptions() },
+      { label: this.recorder.recording ? `Stop recording (${this.recorder.elapsed()})` : 'Record meeting', icon: 'activity', run: () => this.toggleRecording(), danger: this.recorder.recording },
       { label: this.hand ? 'Lower hand' : 'Raise hand', icon: 'hand', run: () => this.toggleHand(), hint: 'H' },
       { label: 'Picture in picture', icon: 'pip', run: () => this.pip(this.pinned || [...this.peers.keys()][0] || 'me'), disabled: !document.pictureInPictureEnabled },
       { label: 'Fullscreen', icon: 'maximize', run: () => this.#fullscreen(), hint: 'F' },
@@ -821,7 +779,7 @@ class App {
       { label: 'Save chat transcript', icon: 'download', run: () => this.#saveTranscript() },
       { label: 'Keyboard shortcuts', icon: 'keyboard', run: () => this.shortcutsModal(), hint: '?' },
       '-',
-      { label: 'Panic wipe', icon: 'panic', danger: true, run: () => this.panic(), hint: '⇧Esc' },
+      { label: 'Leave and clear everything', icon: 'panic', danger: true, run: () => this.panic(), hint: 'Shift+Esc' },
     ], { align: 'end' });
   }
 
@@ -936,11 +894,10 @@ class App {
     modal({
       title: `Verify ${p.info.name}`,
       body: h('div.sas',
-        h('p.muted', 'Compare these with what ', h('strong', p.info.name), ' sees, over the call or in person. If they match, your connection is end-to-end encrypted with no one in the middle.'),
-        h('div.sas-emoji', code.emoji.map(e => h('span', e))),
-        h('div.sas-digits', code.digits)),
+        h('p.muted', 'Read these numbers to ', h('strong', p.info.name), ' out loud or compare them in person. If they match, nobody is intercepting your connection.'),
+        h('div.sas-digits', code.groups.map(g => h('span', g)))),
       actions: [
-        { label: 'They don\'t match', kind: 'btn-ghost', run: () => { p.verified = false; this.#updateTile(id); toast('Do not share anything sensitive. Leave and start a new room over a trusted channel.', { type: 'error', timeout: 9000 }); } },
+        { label: 'They don\'t match', kind: 'btn-ghost', run: () => { p.verified = false; this.#updateTile(id); toast('Don\'t share anything sensitive. Leave and start a new meeting, sending the link another way.', { type: 'error', timeout: 9000 }); } },
         { label: 'They match', kind: 'btn-primary', icon: 'check', run: () => { p.verified = true; this.#updateTile(id); this.#refreshPeopleUi(); if (this.side === 'security') this.#renderSide(); toast(`${p.info.name} is verified.`, { type: 'success' }); } },
       ],
     });
@@ -961,17 +918,17 @@ class App {
         qr,
         h('div.invite-row', h('input.input.mono', { value: link, readOnly: true, 'aria-label': 'Invite link', onfocus: (e) => e.target.select() }),
           h('button.icon-btn', { type: 'button', 'aria-label': 'Copy link', onclick: () => copyText(link, 'Invite link copied') }, icon('copy'))),
-        h('p.field-hint', icon('lock'), 'The key after # never reaches our server. Share it only with people you trust, through a private channel.'),
+        h('p.field-hint', icon('lock'), 'The part after # is the meeting key. It never reaches our server, so only share the link with people you trust.'),
         this.room.wait ? h('p.field-hint', icon('user-plus'), 'Waiting room is on: you approve each person.') : null),
       actions: [
-        navigator.share ? { label: 'Share…', icon: 'share', run: () => { navigator.share({ title: 'Join my private BinaryBond call', url: link }).catch(() => {}); return true; } } : null,
-        { label: 'Copy link', kind: 'btn-primary', icon: 'copy', run: () => { copyText(link, 'Invite link copied'); } },
+        navigator.share ? { label: 'Share…', icon: 'share', run: () => { navigator.share({ title: 'Join my BinaryBond meeting', url: link }).catch(() => {}); return true; } } : null,
+        { label: 'Copy link', kind: 'btn-primary', icon: 'copy', run: () => { copyText(link, 'Meeting link copied'); } },
       ].filter(Boolean),
     });
   }
 
   shortcutsModal() {
-    const rows = [['Mute / unmute', ['M']], ['Camera on / off', ['V']], ['Share screen', ['S']], ['Raise hand', ['H']], ['Chat', ['C']], ['People', ['P']], ['Fullscreen', ['F']], ['Whiteboard', ['W']], ['Push to talk (when enabled)', ['Space']], ['Panic wipe', ['Shift', 'Esc']], ['This help', ['?']]];
+    const rows = [['Mute / unmute', ['M']], ['Camera on / off', ['V']], ['Share screen', ['S']], ['Raise hand', ['H']], ['Chat', ['C']], ['People', ['P']], ['Fullscreen', ['F']], ['Whiteboard', ['W']], ['Push to talk (when enabled)', ['Space']], ['Leave and clear everything', ['Shift', 'Esc']], ['This help', ['?']]];
     modal({ title: 'Keyboard shortcuts', body: h('dl.shortcuts', rows.flatMap(([l, keys]) => [h('dt', l), h('dd', keys.map(k => h('kbd', k)))])) });
   }
 
@@ -1019,7 +976,7 @@ class App {
       const lvl = this.media.level();
       const on = this.media.micOn;
       const ring = $('#micBtn .lvl');
-      if (ring) ring.style.opacity = on ? String(Math.min(1, lvl * 1.6)) : '0';
+      if (ring) { ring.style.opacity = on ? '1' : '0'; ring.style.transform = `scaleX(${on ? Math.min(1, lvl * 1.6) : 0})`; }
       const meTalking = on && lvl > 0.12;
       this.tiles.get('me')?.el.classList.toggle('speaking', meTalking);
       if (meTalking) this.talk.set('me', (this.talk.get('me') || 0) + 100);
@@ -1103,13 +1060,13 @@ class App {
     }
     await this.captions.setWanted(true);
     toast(status === 'available'
-      ? 'Live captions on. Speech is transcribed on each speaker\'s own device, never in the cloud.'
+      ? 'Captions on. Speech is transcribed on each speaker\'s own device and never sent to the cloud.'
       : 'Captions on. Your browser can\'t transcribe privately, so only captions from others will appear.', { timeout: 5000 });
   }
 
   async toggleRecording() {
     if (this.recorder.recording) { this.recorder.stop(); toast('Recording saved to your device.', { type: 'success' }); return; }
-    const ok = await confirmDialog({ title: 'Record this call?', message: 'Everyone in the call will be asked for consent. Recording starts only if all of them agree, and the file is created and saved only on this device.', confirm: 'Ask for consent' });
+    const ok = await confirmDialog({ title: 'Record this meeting?', message: 'Everyone in the meeting will be asked for permission. Recording starts only if all of them agree, and the file is saved only on this device.', confirm: 'Ask everyone' });
     if (!ok) return;
     toast('Waiting for everyone to agree…', { timeout: 4000 });
     try {
@@ -1140,7 +1097,7 @@ class App {
     const answer = (ok) => { if (answered) return; answered = true; clearTimeout(timer); this.sendTo(peer, { type: 'rec-consent', id: reqId, ok }); };
     const dlg = modal({
       title: 'Allow recording?',
-      body: h('div', h('p', h('strong', name), ' wants to record this call, including your audio and video.'),
+      body: h('div', h('p', h('strong', name), ' wants to record this meeting, including your audio and video.'),
         h('ul.list-plain', h('li', icon('check', 'yes'), 'The recording is made and saved only on their device'),
           h('li', icon('check', 'yes'), 'Nothing is uploaded to any server'),
           h('li', icon('info', 'no'), 'You\'ll see a REC indicator for as long as it runs'))),
@@ -1226,7 +1183,7 @@ class App {
   // leaving
   // ===========================================================================
   leave() {
-    this.#ended('Nothing from this call was stored. Messages and files existed only on your devices.', 'You left the call');
+    this.#ended('Nothing from this meeting was stored. Messages and files existed only on the participants\' devices.', 'You left the meeting');
   }
 
   #ended(sub, title) {

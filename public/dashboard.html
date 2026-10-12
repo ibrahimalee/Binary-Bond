@@ -2,26 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Dashboard — BinaryBond</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard | BinaryBond</title>
   <meta name="referrer" content="no-referrer">
   <meta name="robots" content="noindex">
-  <meta name="color-scheme" content="dark light">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/site.css">
   <link rel="stylesheet" href="/css/console.css">
+  <script type="module" src="/js/site.js"></script>
   <script type="module" src="/js/dashboard.js"></script>
 </head>
 <body>
   <!--#sprite-->
-  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
-  <nav class="topnav">
-    <a class="brand" href="/"><svg class="brand-mark"><use href="#i-logo"/></svg><span class="brand-name">BinaryBond</span></a>
-    <div class="topnav-links"><a href="/">App</a><a href="/docs">API docs</a><a href="/privacy">Privacy</a></div>
-    <div class="topnav-actions">
-      <button class="btn btn-ghost btn-sm" id="signOut" type="button" hidden><svg class="ic"><use href="#i-log-out"/></svg> Sign out</button>
-    </div>
-  </nav>
-  <main class="console" id="root" aria-live="polite"></main>
+  <!--#header-->
+  <div class="console-page">
+    <main class="console" id="root" aria-live="polite"></main>
+  </div>
+  <button class="btn btn-sm signout-btn" id="signOut" type="button" hidden><svg class="ic"><use href="#i-log-out"/></svg>Sign out</button>
 </body>
 </html>

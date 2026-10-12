@@ -71,15 +71,9 @@ export async function sha256Hex(data) {
 }
 
 // ---- Safety numbers ---------------------------------------------------------
-// Both sides hash the two DTLS certificate fingerprints that actually secure the
-// media/data connection. If the codes match out loud, nobody is in the middle.
-
-const EMOJI = [
-  '🐶', '🐱', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🦉',
-  '🦄', '🐝', '🦋', '🐢', '🐙', '🦀', '🐬', '🐳', '🌵', '🌲', '🌻', '🍄', '🌙', '⭐', '🔥', '🌈',
-  '🍎', '🍋', '🍉', '🍇', '🍓', '🥑', '🥕', '🌽', '🍕', '🍩', '🎂', '☕', '⚽', '🏀', '🎸', '🎹',
-  '🚀', '✈️', '🚲', '⛵', '🏠', '🔑', '🔔', '🎁', '📚', '✏️', '⏰', '💡', '🧲', '🎈', '🧩', '💎',
-];
+// Both sides hash the two DTLS certificate fingerprints that secure the actual
+// media connection. Four groups of five digits (about 66 bits) are easy to read
+// aloud; if both people see the same numbers, nobody is in the middle.
 
 export function fingerprintsFromSdp(sdp) {
   return [...new Set((String(sdp).match(/a=fingerprint:\S+ [0-9A-Fa-f:]+/g) || []).map(l => l.slice(14).toUpperCase()))];
@@ -88,8 +82,7 @@ export function fingerprintsFromSdp(sdp) {
 export async function safetyCode(fingerprintsA, fingerprintsB) {
   const material = [fingerprintsA.join(','), fingerprintsB.join(',')].sort().join('|');
   const h = await sha256Hex('binarybond/v2/sas|' + material);
-  const emoji = [];
-  for (let i = 0; i < 6; i++) emoji.push(EMOJI[parseInt(h.slice(i * 2, i * 2 + 2), 16) % 64]);
-  const digits = (BigInt('0x' + h.slice(16, 32)) % 10n ** 12n).toString().padStart(12, '0').replace(/(\d{4})(?=\d)/g, '$1 ');
-  return { emoji, digits };
+  const groups = [];
+  for (let i = 0; i < 4; i++) groups.push((parseInt(h.slice(i * 8, i * 8 + 8), 16) % 100000).toString().padStart(5, '0'));
+  return { groups, digits: groups.join(' ') };
 }
