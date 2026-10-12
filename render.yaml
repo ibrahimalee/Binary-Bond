@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: binarybond
+    runtime: node
+    plan: free
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: BB_SECRET
+        generateValue: true
+      - key: BB_ADMIN_TOKEN
+        generateValue: true
+      - key: BB_TRUST_PROXY
+        value: "1"
+      # Free disks are not persistent, so keep nothing on disk.
+      - key: BB_EPHEMERAL
+        value: "1"
+      # Set to your https://<name>.onrender.com address after the first deploy.
+      - key: PUBLIC_URL
+        sync: false
