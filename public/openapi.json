@@ -5,67 +5,260 @@
     "version": "2.0.0",
     "description": "Embed end-to-end encrypted peer-to-peer calls. Authenticate with `Authorization: Bearer <api key>`. Keys are server-side secrets; never ship them to browsers."
   },
-  "servers": [{ "url": "/" }],
-  "security": [{ "apiKey": [] }],
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "security": [
+    {
+      "apiKey": []
+    }
+  ],
   "components": {
     "securitySchemes": {
-      "apiKey": { "type": "http", "scheme": "bearer", "bearerFormat": "bb_live_…" },
-      "admin": { "type": "http", "scheme": "bearer", "description": "BB_ADMIN_TOKEN" }
+      "apiKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "bb_live_…"
+      },
+      "admin": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "BB_ADMIN_TOKEN"
+      }
     },
     "schemas": {
-      "Error": { "type": "object", "properties": { "error": { "type": "string" } }, "required": ["error"] },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
       "Limits": {
         "type": "object",
         "properties": {
-          "label": { "type": "string" }, "maxPeers": { "type": "integer" }, "maxMinutes": { "type": "integer" },
-          "monthlyPeerMinutes": { "type": "integer", "description": "0 = unlimited" },
-          "relay": { "type": "boolean" }, "whitelabel": { "type": "boolean" }, "api": { "type": "boolean" }
+          "label": {
+            "type": "string"
+          },
+          "maxPeers": {
+            "type": "integer"
+          },
+          "maxMinutes": {
+            "type": "integer"
+          },
+          "monthlyPeerMinutes": {
+            "type": "integer",
+            "description": "0 = unlimited"
+          },
+          "relay": {
+            "type": "boolean"
+          },
+          "whitelabel": {
+            "type": "boolean"
+          },
+          "api": {
+            "type": "boolean"
+          }
         }
       },
       "Tenant": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "example": "t_3f9a1c2b7d4e" }, "name": { "type": "string" }, "email": { "type": "string" },
-          "plan": { "type": "string", "enum": ["free", "pro", "business"] }, "createdAt": { "type": "integer" }, "disabled": { "type": "boolean" },
-          "keyPrefix": { "type": "string", "example": "bb_live_AbCd" },
-          "branding": { "type": "object", "properties": { "name": { "type": "string" }, "accent": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" }, "logoUrl": { "type": "string", "format": "uri" } } },
-          "domains": { "type": "array", "items": { "type": "string", "format": "uri" } },
-          "webhook": { "type": "object", "properties": { "url": { "type": "string" }, "secret": { "type": "string" } } },
-          "limits": { "$ref": "#/components/schemas/Limits" }
+          "id": {
+            "type": "string",
+            "example": "t_3f9a1c2b7d4e"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "plan": {
+            "type": "string",
+            "enum": [
+              "free",
+              "pro",
+              "business"
+            ]
+          },
+          "createdAt": {
+            "type": "integer"
+          },
+          "disabled": {
+            "type": "boolean"
+          },
+          "keyPrefix": {
+            "type": "string",
+            "example": "bb_live_AbCd"
+          },
+          "branding": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "accent": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "logoUrl": {
+                "type": "string",
+                "format": "uri"
+              }
+            }
+          },
+          "domains": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "webhook": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "secret": {
+                "type": "string"
+              }
+            }
+          },
+          "limits": {
+            "$ref": "#/components/schemas/Limits"
+          }
         }
       },
       "UsageDay": {
         "type": "object",
-        "properties": { "date": { "type": "string", "format": "date" }, "rooms": { "type": "integer" }, "peerSeconds": { "type": "integer" }, "peakPeers": { "type": "integer" }, "joins": { "type": "integer" } }
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "rooms": {
+            "type": "integer"
+          },
+          "peerSeconds": {
+            "type": "integer"
+          },
+          "peakPeers": {
+            "type": "integer"
+          },
+          "joins": {
+            "type": "integer"
+          }
+        }
       },
       "LiveRoom": {
         "type": "object",
         "properties": {
-          "room": { "type": "string", "description": "One-way room reference; cannot be used to join" },
-          "ref": { "type": ["string", "null"], "description": "Your ref from the session token" },
-          "peers": { "type": "integer" }, "createdAt": { "type": "integer" }, "expiresAt": { "type": "integer" }
+          "room": {
+            "type": "string",
+            "description": "One-way room reference; cannot be used to join"
+          },
+          "ref": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Your ref from the session token"
+          },
+          "peers": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "type": "integer"
+          },
+          "expiresAt": {
+            "type": "integer"
+          }
         }
       },
       "WebhookEvent": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "type": { "type": "string", "enum": ["room.created", "room.ended", "participant.joined", "participant.left", "ping"] },
-          "created": { "type": "integer" },
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "room.created",
+              "room.ended",
+              "participant.joined",
+              "participant.left",
+              "ping"
+            ]
+          },
+          "created": {
+            "type": "integer"
+          },
           "data": {
             "type": "object",
             "properties": {
-              "room": { "type": "string" }, "ref": { "type": ["string", "null"] }, "peers": { "type": "integer" },
-              "peakPeers": { "type": "integer" }, "durationSec": { "type": "integer" },
-              "reason": { "type": "string", "enum": ["empty", "expired", "self-destruct", "host-ended", "server-shutdown"] }
+              "room": {
+                "type": "string"
+              },
+              "ref": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "peers": {
+                "type": "integer"
+              },
+              "peakPeers": {
+                "type": "integer"
+              },
+              "durationSec": {
+                "type": "integer"
+              },
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "empty",
+                  "expired",
+                  "self-destruct",
+                  "host-ended",
+                  "server-shutdown"
+                ]
+              }
             }
           }
         }
       }
     },
     "responses": {
-      "Unauthorized": { "description": "Missing or invalid key", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-      "RateLimited": { "description": "Too many requests", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+      "Unauthorized": {
+        "description": "Missing or invalid key",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "Too many requests",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
     }
   },
   "paths": {
@@ -79,21 +272,73 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "ttlSec": { "type": "integer", "minimum": 30, "maximum": 86400, "default": 900 },
-                  "maxPeers": { "type": "integer", "minimum": 2 },
-                  "maxMinutes": { "type": "integer", "minimum": 1 },
-                  "relay": { "type": "boolean", "description": "Force TURN for every participant (hides IPs)" },
-                  "ref": { "type": "string", "pattern": "^[\\w.:/-]{1,64}$", "description": "Your own identifier, echoed in webhooks and /v1/rooms" }
+                  "ttlSec": {
+                    "type": "integer",
+                    "minimum": 30,
+                    "maximum": 86400,
+                    "default": 900
+                  },
+                  "maxPeers": {
+                    "type": "integer",
+                    "minimum": 2
+                  },
+                  "maxMinutes": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "relay": {
+                    "type": "boolean",
+                    "description": "Force TURN for every participant (hides IPs)"
+                  },
+                  "ref": {
+                    "type": "string",
+                    "pattern": "^[\\w.:/-]{1,64}$",
+                    "description": "Your own identifier, echoed in webhooks and /v1/rooms"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "201": { "description": "Created", "content": { "application/json": { "schema": { "type": "object", "properties": { "token": { "type": "string" }, "expiresAt": { "type": "integer" }, "embedUrl": { "type": "string", "format": "uri" } } } } } },
-          "400": { "description": "Invalid input", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "429": { "$ref": "#/components/responses/RateLimited" }
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": "integer"
+                    },
+                    "embedUrl": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          }
         }
       }
     },
@@ -101,8 +346,27 @@
       "get": {
         "summary": "Workspace details and this month's usage",
         "responses": {
-          "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "tenant": { "$ref": "#/components/schemas/Tenant" }, "monthPeerMinutes": { "type": "integer" } } } } } },
-          "401": { "$ref": "#/components/responses/Unauthorized" }
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tenant": {
+                      "$ref": "#/components/schemas/Tenant"
+                    },
+                    "monthPeerMinutes": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
         }
       },
       "patch": {
@@ -113,76 +377,568 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "name": { "type": "string" },
-                  "branding": { "type": "object", "properties": { "name": { "type": "string" }, "accent": { "type": "string" }, "logoUrl": { "type": "string" } } },
-                  "webhook": { "type": "object", "properties": { "url": { "type": "string" } } },
-                  "domains": { "type": "array", "items": { "type": "string" } }
+                  "name": {
+                    "type": "string"
+                  },
+                  "branding": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "accent": {
+                        "type": "string"
+                      },
+                      "logoUrl": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "webhook": {
+                    "type": "object",
+                    "properties": {
+                      "url": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "domains": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
                 }
               }
             }
           }
         },
-        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "tenant": { "$ref": "#/components/schemas/Tenant" } } } } } }, "401": { "$ref": "#/components/responses/Unauthorized" } }
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tenant": {
+                      "$ref": "#/components/schemas/Tenant"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
       }
     },
     "/v1/me/rotate-key": {
       "post": {
         "summary": "Issue a new API key; the current one stops working immediately",
-        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "apiKey": { "type": "string" } } } } } }, "401": { "$ref": "#/components/responses/Unauthorized" } }
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "apiKey": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
       }
     },
     "/v1/usage": {
       "get": {
         "summary": "Daily aggregate usage",
-        "parameters": [{ "name": "days", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 365, "default": 30 } }],
-        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "days": { "type": "array", "items": { "$ref": "#/components/schemas/UsageDay" } }, "monthPeerMinutes": { "type": "integer" }, "limits": { "$ref": "#/components/schemas/Limits" } } } } } }, "401": { "$ref": "#/components/responses/Unauthorized" } }
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 365,
+              "default": 30
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "days": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/UsageDay"
+                      }
+                    },
+                    "monthPeerMinutes": {
+                      "type": "integer"
+                    },
+                    "limits": {
+                      "$ref": "#/components/schemas/Limits"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
       }
     },
     "/v1/rooms": {
       "get": {
         "summary": "Live rooms created with your tokens",
-        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "rooms": { "type": "array", "items": { "$ref": "#/components/schemas/LiveRoom" } } } } } } }, "401": { "$ref": "#/components/responses/Unauthorized" } }
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "rooms": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/LiveRoom"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
       }
     },
     "/v1/webhook/test": {
       "post": {
         "summary": "Deliver a signed ping event to your webhook URL",
-        "responses": { "200": { "description": "OK", "content": { "application/json": { "schema": { "type": "object", "properties": { "delivered": { "type": "boolean" } } } } } }, "400": { "description": "No webhook URL configured" } }
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "delivered": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No webhook URL configured"
+          }
+        }
       }
     },
     "/v1/billing/checkout": {
       "post": {
         "summary": "Create a Stripe Checkout session for a plan upgrade",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object", "properties": { "plan": { "type": "string", "enum": ["pro", "business"] } }, "required": ["plan"] } } } },
-        "responses": { "200": { "description": "Redirect the user to url", "content": { "application/json": { "schema": { "type": "object", "properties": { "url": { "type": "string", "format": "uri" } } } } } }, "501": { "description": "Billing not configured" } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "plan": {
+                    "type": "string",
+                    "enum": [
+                      "pro",
+                      "business"
+                    ]
+                  }
+                },
+                "required": [
+                  "plan"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Redirect the user to url",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Billing not configured"
+          }
+        }
       }
     },
     "/v1/billing/portal": {
       "post": {
         "summary": "Create a Stripe customer portal session",
-        "responses": { "200": { "description": "Redirect the user to url", "content": { "application/json": { "schema": { "type": "object", "properties": { "url": { "type": "string", "format": "uri" } } } } } } }
+        "responses": {
+          "200": {
+            "description": "Redirect the user to url",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/config": {
-      "get": { "security": [], "summary": "Public server capabilities and plan limits", "responses": { "200": { "description": "OK" } } }
+      "get": {
+        "security": [],
+        "summary": "Public server capabilities and plan limits",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     },
     "/api/signup": {
       "post": {
         "security": [],
         "summary": "Create a free workspace (when BB_OPEN_SIGNUP=1)",
-        "requestBody": { "content": { "application/json": { "schema": { "type": "object", "properties": { "name": { "type": "string" }, "email": { "type": "string", "format": "email" } }, "required": ["name", "email"] } } } },
-        "responses": { "201": { "description": "Created; the API key is returned once" }, "403": { "description": "Signup disabled" } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                },
+                "required": [
+                  "name",
+                  "email"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created; the API key is returned once"
+          },
+          "403": {
+            "description": "Signup disabled"
+          }
+        }
       }
     },
-    "/healthz": { "get": { "security": [], "summary": "Liveness probe", "responses": { "200": { "description": "OK" } } } }
+    "/healthz": {
+      "get": {
+        "security": [],
+        "summary": "Liveness probe",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/brand": {
+      "get": {
+        "security": [],
+        "summary": "Branding for a session token (white-label name, colour and logo)",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/billing/stripe-webhook": {
+      "post": {
+        "security": [],
+        "summary": "Stripe event receiver. Verified with the Stripe-Signature header; not for direct use",
+        "tags": [
+          "Operator"
+        ],
+        "responses": {
+          "200": {
+            "description": "Event accepted"
+          },
+          "400": {
+            "description": "Bad signature or body"
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "security": [
+          {
+            "admin": []
+          }
+        ],
+        "summary": "Prometheus metrics. Needs BB_METRICS_TOKEN as a bearer token",
+        "tags": [
+          "Operator"
+        ],
+        "responses": {
+          "200": {
+            "description": "Text exposition format"
+          },
+          "401": {
+            "description": "Missing or wrong token"
+          }
+        }
+      }
+    },
+    "/admin/api/overview": {
+      "get": {
+        "security": [
+          {
+            "admin": []
+          }
+        ],
+        "summary": "Live rooms, connections, webhook totals and 30-day public usage",
+        "tags": [
+          "Operator"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Missing or wrong admin token"
+          }
+        }
+      }
+    },
+    "/admin/api/tenants": {
+      "get": {
+        "security": [
+          {
+            "admin": []
+          }
+        ],
+        "summary": "List workspaces with monthly usage",
+        "tags": [
+          "Operator"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Missing or wrong admin token"
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "admin": []
+          }
+        ],
+        "summary": "Create a workspace",
+        "tags": [
+          "Operator"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Missing or wrong admin token"
+          }
+        }
+      }
+    },
+    "/admin/api/tenants/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "patch": {
+        "security": [
+          {
+            "admin": []
+          }
+        ],
+        "summary": "Update a workspace, including its plan",
+        "tags": [
+          "Operator"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Missing or wrong admin token"
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "admin": []
+          }
+        ],
+        "summary": "Delete a workspace",
+        "tags": [
+          "Operator"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Missing or wrong admin token"
+          }
+        }
+      }
+    },
+    "/admin/api/tenants/{id}/rotate-key": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "post": {
+        "security": [
+          {
+            "admin": []
+          }
+        ],
+        "summary": "Issue a new API key for a workspace",
+        "tags": [
+          "Operator"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Missing or wrong admin token"
+          }
+        }
+      }
+    },
+    "/admin/api/tenants/{id}/usage": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "security": [
+          {
+            "admin": []
+          }
+        ],
+        "summary": "30 days of usage for a workspace",
+        "tags": [
+          "Operator"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Missing or wrong admin token"
+          }
+        }
+      }
+    }
   },
   "webhooks": {
     "roomEvent": {
       "post": {
         "summary": "Room and participant lifecycle events",
         "description": "Verify `X-BinaryBond-Signature: t=<unix>,v1=<hex>` where v1 = HMAC-SHA256(secret, `${t}.${rawBody}`).",
-        "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WebhookEvent" } } } },
-        "responses": { "200": { "description": "Return any 2xx to acknowledge" } }
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookEvent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return any 2xx to acknowledge"
+          }
+        }
       }
     }
   }
