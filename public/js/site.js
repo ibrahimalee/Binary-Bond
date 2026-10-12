@@ -28,3 +28,14 @@ if (plansHost) {
     }
   }).catch(() => {});
 }
+
+// Gentle reveal-on-scroll. Content stays fully visible without JavaScript or
+// when the visitor prefers reduced motion.
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
+  document.documentElement.classList.add('js');
+  const targets = document.querySelectorAll('.feature-row, .photo-card, .mini, .card, .steps li, .plan, .fact, .section-head, .shot, .compare, .faq details, .code-sample');
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+  targets.forEach((el, i) => { el.classList.add('reveal'); el.style.transitionDelay = `${(i % 4) * 60}ms`; io.observe(el); });
+}
