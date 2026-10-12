@@ -170,8 +170,26 @@ export class Media extends Emitter {
       track.enabled = this.micOn;
     }
     this.audioTrack = track;
-    this.emit('track', 'audio', track);
+    this.#emitAudio();
   }
+
+  // Peers receive the mic alone, or mic + shared-tab audio while screen sharing with sound.
+  #emitAudio() {
+    this.mix?.stop();
+    this.mix = null;
+    if (this.screenAudio) {
+      const ctx = audioContext();
+      const dest = ctx.createMediaStreamDestination();
+      const srcs = [this.audioTrack, this.screenAudio].filter(Boolean).map(t => { const s = ctx.createMediaStreamSource(new MediaStream([t])); s.connect(dest); return s; });
+      const out = dest.stream.getAudioTracks()[0];
+      this.mix = { track: out, stop: () => { srcs.forEach(s => { try { s.disconnect(); } catch { /* ignore */ } }); out.stop(); } };
+      this.emit('track', 'audio', out);
+    } else {
+      this.emit('track', 'audio', this.audioTrack);
+    }
+  }
+
+  get outgoingAudio() { return this.mix?.track || this.audioTrack; }
 
   async #rebuildVideo() {
     this.fx.video?.stop();
@@ -244,8 +262,14 @@ export class Media extends Emitter {
 
   async startScreen() {
     if (!navigator.mediaDevices?.getDisplayMedia) throw new Error('Screen sharing is not supported on this device.');
-    const s = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: { ideal: 15, max: 30 } }, audio: false });
+    const s = await navigator.mediaDevices.getDisplayMedia({
+      video: { frameRate: { ideal: 15, max: 30 } },
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+      selfBrowserSurface: 'exclude', surfaceSwitching: 'include', systemAudio: 'include',
+    });
     const track = s.getVideoTracks()[0];
+    this.screenAudio = s.getAudioTracks()[0] || null;
+    if (this.screenAudio) { this.screenAudio.onended = () => { this.screenAudio = null; this.#emitAudio(); }; this.#emitAudio(); }
     track.contentHint = 'detail';
     track.onended = () => this.stopScreen();
     this.screenTrack = track;
@@ -259,6 +283,7 @@ export class Media extends Emitter {
     this.screenTrack.onended = null;
     this.screenTrack.stop();
     this.screenTrack = null;
+    if (this.screenAudio) { this.screenAudio.onended = null; this.screenAudio.stop(); this.screenAudio = null; this.#emitAudio(); }
     this.emit('track', 'video', this.videoTrack);
     this.emit('preview');
     this.emit('state');
@@ -266,12 +291,25 @@ export class Media extends Emitter {
 
   level() { return this.meter ? this.meter.level() : 0; }
 
+  get canFlip() { return this.devices.videoin.length > 1; }
+
+  // Cycles through cameras (front/back on phones).
+  async flipCamera() {
+    const cams = this.devices.videoin;
+    if (cams.length < 2) return;
+    const current = this.rawVideo?.getSettings().deviceId || this.prefs.videoIn;
+    const i = cams.findIndex(c => c.id === current);
+    await this.switchDevice('videoin', cams[(i + 1) % cams.length].id);
+  }
+
   stop() {
     this.fx.audio?.stop();
     this.fx.video?.stop();
     this.meter?.stop();
-    for (const t of [this.rawAudio, this.rawVideo, this.screenTrack, this.audioTrack, this.videoTrack]) t?.stop();
-    this.rawAudio = this.rawVideo = this.screenTrack = this.audioTrack = this.videoTrack = null;
+    this.mix?.stop();
+    this.mix = null;
+    for (const t of [this.rawAudio, this.rawVideo, this.screenTrack, this.screenAudio, this.audioTrack, this.videoTrack]) t?.stop();
+    this.rawAudio = this.rawVideo = this.screenTrack = this.screenAudio = this.audioTrack = this.videoTrack = null;
   }
 }
 

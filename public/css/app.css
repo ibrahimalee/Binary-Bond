@@ -652,3 +652,16 @@ body.embed .topnav { position: absolute; left: 0; right: 0; background: transpar
 .check-list li.warn > .ic { color: var(--warn); background: var(--warn-soft); }
 .check-list strong { display: block; font-size: 14px; }
 .check-list small { color: var(--muted); font-size: 12.5px; }
+
+/* ---------- self tile extras & pop-out ---------- */
+.tile-actions .flip-btn { display: none; }
+.tile.can-flip .tile-actions .flip-btn { display: grid; }
+.pip-placeholder { flex: 1; display: grid; place-content: center; justify-items: center; gap: 10px; color: var(--muted); border: 1px dashed var(--border-strong); border-radius: var(--radius-lg); }
+.pip-placeholder .ic { width: 36px; height: 36px; }
+.pip-body { margin: 0; height: 100vh; display: flex; flex-direction: column; gap: 8px; padding: 8px; background: var(--bg); overflow: hidden; }
+.pip-body .grid { flex: 1; min-height: 0; gap: 6px; }
+.pip-body .tile { border-radius: 12px; }
+.pip-body .tile-actions { display: none; }
+.pip-dock { display: flex; justify-content: center; gap: 8px; }
+.pip-dock .ctrl { width: 42px; height: 42px; border-radius: 12px; }
+.popover { max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; }

@@ -232,6 +232,7 @@ class RoomManager {
     if (!m) return;
     room.peers.delete(peer);
     this.usage?.addSeconds(room.tenantId, (this.now() - m.joinedAt) / 1000);
+    this._checkQuota(room.tenantId);
     this._clear(m.conn);
     this._tenantEvent(room, 'participant.left', { peers: room.peers.size });
     if (room.peers.size === 0) return this._destroy(room, 'empty');
@@ -266,6 +267,23 @@ class RoomManager {
     this._tenantEvent(room, 'room.ended', {
       reason, peakPeers: room.peak, durationSec: Math.round((this.now() - room.createdAt) / 1000),
     });
+  }
+
+  // Fires quota.warning once per month at 80% and once at 100% of the plan.
+  _checkQuota(tid) {
+    if (tid === PUBLIC_TENANT || !this.usage || !this.tenants) return;
+    const tenant = this.tenants.get(tid);
+    const quota = tenant && this.plans[tenant.plan]?.monthlyPeerMinutes;
+    if (!quota) return;
+    const used = this.usage.monthPeerMinutes(tid);
+    const month = new Date(this.now()).toISOString().slice(0, 7);
+    const level = used >= quota ? 100 : used >= quota * 0.8 ? 80 : 0;
+    if (!level) return;
+    tenant.quotaAlerts ||= {};
+    if ((tenant.quotaAlerts[month] || 0) >= level) return;
+    tenant.quotaAlerts[month] = level;
+    this.tenants.store.save();
+    this.webhooks?.emit(tenant, 'quota.warning', { percent: level, usedMinutes: used, quotaMinutes: quota, month });
   }
 
   _tenantEvent(room, type, data) {

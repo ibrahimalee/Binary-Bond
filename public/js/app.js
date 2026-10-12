@@ -363,6 +363,7 @@ class App {
       this.peakPeers = 0;
       this.#createTile('me', true);
       this.#startLoops();
+      this.#wakeLock(true);
       this.chat.system(m.peers.length ? 'You joined the call' : 'You\'re the first one here. Share the invite link to bring others in.', 'shield');
       if (!m.peers.length && !this.isEmbed) setTimeout(() => { if (!this.peers.size && this.view === 'call') this.inviteModal(); }, 600);
     }
@@ -378,7 +379,7 @@ class App {
     if (this.peers.has(id)) return;
     const peer = new Peer({
       id, initiator, signaling: this.sig, iceServers: this.ice, forceRelay: this.forceRelay,
-      tracks: { audio: this.media.audioTrack, video: this.media.screenTrack || this.media.videoTrack },
+      tracks: { audio: this.media.outgoingAudio, video: this.media.screenTrack || this.media.videoTrack },
     });
     peer.info.name = cleanName(hello?.name);
     peer.on('open', () => {
@@ -509,6 +510,8 @@ class App {
     const status = self ? null : h('div.tile-status', 'Connecting…');
     const actions = h('div.tile-actions',
       h('button', { type: 'button', title: 'Pin', 'aria-label': 'Pin', onclick: () => this.togglePin(id) }, icon('pin')),
+      self ? h('button.flip-btn', { type: 'button', title: 'Switch camera', 'aria-label': 'Switch camera', onclick: () => this.media.flipCamera() }, icon('refresh')) : null,
+      self ? h('button', { type: 'button', title: 'Hide self view', 'aria-label': 'Hide self view', onclick: () => this.toggleSelfView() }, icon('eye-off')) : null,
       self ? null : h('button', { type: 'button', title: 'Picture in picture', 'aria-label': 'Picture in picture', onclick: () => this.pip(id) }, icon('pip')),
       h('button', { type: 'button', title: 'Fullscreen', 'aria-label': 'Fullscreen', onclick: () => el.requestFullscreen?.().catch(() => {}) }, icon('maximize')));
     const el = h(`div.tile${self ? '.self' : ''}`, { dataset: { id }, tabIndex: 0 },
@@ -529,6 +532,8 @@ class App {
     t.video.srcObject = hasVideo ? stream : null;
     t.el.classList.toggle('mirror', this.media.prefs.mirror && !this.media.screenTrack);
     t.el.classList.toggle('screen', Boolean(this.media.screenTrack));
+    t.el.classList.toggle('can-flip', this.media.canFlip && !this.media.screenTrack);
+    t.el.hidden = Boolean(this.selfHidden) && this.peers.size > 0;
     this.#paintTile(t, { id: 'me', ...this.selfInfo(), name: `${this.me.name} (you)`, hasVideo });
   }
 
@@ -732,7 +737,7 @@ class App {
     if (this.media.screenTrack) { this.media.stopScreen(); return; }
     try {
       await this.media.startScreen();
-      toast('You are sharing your screen. Make sure nothing private is visible.', { type: 'info', timeout: 5000 });
+      toast(this.media.screenAudio ? 'Sharing your screen with its audio. Make sure nothing private is visible.' : 'You are sharing your screen. Make sure nothing private is visible.', { type: 'info', timeout: 5000 });
     } catch (e) {
       if (e.name !== 'NotAllowedError' && e.name !== 'AbortError') toast(e.message || 'Screen sharing failed.', { type: 'error' });
     }
@@ -800,6 +805,8 @@ class App {
       { label: this.hand ? 'Lower hand' : 'Raise hand', icon: 'hand', run: () => this.toggleHand(), hint: 'H' },
       { label: 'Picture in picture', icon: 'pip', run: () => this.pip(this.pinned || [...this.peers.keys()][0] || 'me'), disabled: !document.pictureInPictureEnabled },
       { label: 'Fullscreen', icon: 'maximize', run: () => this.#fullscreen(), hint: 'F' },
+      'documentPictureInPicture' in window ? { label: 'Pop out call', icon: 'pip', run: () => this.popOut() } : null,
+      { label: this.selfHidden ? 'Show self view' : 'Hide self view', icon: this.selfHidden ? 'eye' : 'eye-off', run: () => this.toggleSelfView() },
       { label: 'Save chat transcript', icon: 'download', run: () => this.#saveTranscript() },
       { label: 'Keyboard shortcuts', icon: 'keyboard', run: () => this.shortcutsModal(), hint: '?' },
       '-',
@@ -1137,6 +1144,55 @@ class App {
 
   refreshSettings() { if (this.side === 'settings') this.#renderSide(); }
 
+  toggleSelfView() {
+    this.selfHidden = !this.selfHidden;
+    this.refreshSelfTile();
+    this.#layout();
+    toast(this.selfHidden ? 'Self view hidden. Others can still see you.' : 'Self view shown.', { timeout: 2200 });
+  }
+
+  // Floats the live call (grid + essential controls) above other apps (Chrome's
+  // Document Picture-in-Picture). The real elements move, so video keeps playing.
+  async popOut() {
+    if (this.pipWin) { this.pipWin.close(); return; }
+    let win;
+    try { win = await window.documentPictureInPicture.requestWindow({ width: 420, height: 300 }); } catch { return toast('Pop-out is not available here.', { type: 'warn' }); }
+    this.pipWin = win;
+    for (const link of document.querySelectorAll('link[rel=stylesheet]')) win.document.head.append(Object.assign(win.document.createElement('link'), { rel: 'stylesheet', href: link.href }));
+    win.document.documentElement.dataset.theme = document.documentElement.dataset.theme || '';
+    win.document.head.append(Object.assign(win.document.createElement('title'), { textContent: 'BinaryBond' }));
+    win.document.body.className = 'pip-body';
+    win.document.body.append(document.querySelector('svg.sprite').cloneNode(true));
+    const grid = $('#grid');
+    const placeholder = h('div.pip-placeholder', icon('pip'), h('p', 'The call is in a floating window.'), h('button.btn.btn-ghost.btn-sm', { type: 'button', onclick: () => win.close() }, 'Bring it back'));
+    grid.replaceWith(placeholder);
+    const controls = h('div.pip-dock',
+      h('button.ctrl', { type: 'button', 'aria-label': 'Microphone', onclick: () => { this.toggleMic(); paint(); } }),
+      h('button.ctrl', { type: 'button', 'aria-label': 'Camera', onclick: async () => { await this.toggleCam(); paint(); } }),
+      h('button.ctrl.ctrl-leave', { type: 'button', 'aria-label': 'Leave', onclick: () => { win.close(); this.leave(); } }, icon('leave')));
+    const paint = () => {
+      const [mic, cam] = controls.children;
+      mic.classList.toggle('off', !this.media.micOn); mic.replaceChildren(icon(this.media.micOn ? 'mic' : 'mic-off'));
+      cam.classList.toggle('off', !this.media.camOn); cam.replaceChildren(icon(this.media.camOn ? 'cam' : 'cam-off'));
+    };
+    paint();
+    win.document.body.append(grid, controls);
+    this.#layout();
+    win.addEventListener('pagehide', () => {
+      placeholder.replaceWith(grid);
+      this.pipWin = null;
+      this.#layout();
+    });
+  }
+
+  // Keep phones awake during calls.
+  async #wakeLock(on) {
+    try {
+      if (on && 'wakeLock' in navigator && !this.lock) { this.lock = await navigator.wakeLock.request('screen'); this.lock.addEventListener('release', () => { this.lock = null; }); }
+      else if (!on && this.lock) { await this.lock.release(); this.lock = null; }
+    } catch { /* not allowed (e.g. battery saver) */ }
+  }
+
   async enableNotifications(on) {
     if (on && 'Notification' in window && Notification.permission !== 'granted') {
       const p = await Notification.requestPermission().catch(() => 'denied');
@@ -1177,6 +1233,9 @@ class App {
 
   teardown() {
     this.#stopLoops();
+    this.#wakeLock(false);
+    this.pipWin?.close();
+    this.selfHidden = false;
     const sig = this.sig;
     this.sig = null;
     sig?.close();
@@ -1258,6 +1317,7 @@ class App {
         toast('Your camera was paused while you were away.', { action: { label: 'Turn on', run: () => this.toggleCam() }, timeout: 8000 });
       }
       if (!document.hidden && this.side === 'chat') { this.unread = 0; this.#renderUnread(); }
+      if (!document.hidden) this.#wakeLock(true); // the lock is released whenever the page is hidden
     });
     window.addEventListener('beforeunload', () => { this.sig?.close(); });
     window.addEventListener('pagehide', () => { this.sig?.close(); });

@@ -199,3 +199,31 @@ test('pages, sdk headers and CSP host hardening', async (t) => {
   assert.doesNotMatch(csp, /evil/);
   assert.match(csp, /connect-src 'self' ws:\/\/invalid\.local/);
 });
+
+test('quota.warning fires once at 80% and once at 100% per month', async (t) => {
+  const events = [];
+  const webhooks = { delivered: 0, failed: 0, emit: (tenant, type, data) => { events.push({ type, data }); return Promise.resolve(true); } };
+  const bb = await startServer({ plans: { free: { monthlyPeerMinutes: 10 } } }, { webhooks });
+  t.after(() => bb.close());
+  const { apiKey, tenant } = (await api(bb, 'POST', '/admin/api/tenants', { token: ADMIN, body: { name: 'Q' } })).json;
+  const quotaEvents = () => events.filter(e => e.type === 'quota.warning').map(e => e.data.percent);
+  const call = async () => {
+    const { token } = (await api(bb, 'POST', '/v1/sessions', { token: apiKey, body: {} })).json;
+    const c = await client(bb);
+    c.send({ t: 'join', ...roomCreds(), token });
+    const j = await c.next(m => m.t === 'joined' || m.t === 'denied');
+    await c.close();
+    await new Promise(r => setTimeout(r, 30));
+    return j.t;
+  };
+  bb.usage.addSeconds(tenant.id, 8.5 * 60);
+  await call();
+  assert.deepEqual(quotaEvents(), [80]);
+  await call();
+  assert.deepEqual(quotaEvents(), [80], 'no duplicate warning');
+  bb.usage.addSeconds(tenant.id, 2 * 60);
+  assert.equal(await call(), 'denied', 'over quota: new rooms refused');
+  bb.rooms._checkQuota(tenant.id);
+  assert.deepEqual(quotaEvents(), [80, 100]);
+  assert.equal((await api(bb, 'GET', '/v1/me', { token: apiKey })).json.tenant.quotaAlerts, undefined, 'internal state not exposed');
+});

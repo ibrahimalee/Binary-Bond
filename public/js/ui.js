@@ -55,6 +55,7 @@ export function popover(anchor, items, { align = 'center' } = {}) {
   document.querySelectorAll('.popover').forEach(p => p.remove());
   const menu = h('div.popover', { role: 'menu' });
   for (const it of items) {
+    if (!it) continue;
     if (it === '-') { menu.append(h('div.popover-sep')); continue; }
     if (it.custom) { menu.append(it.custom); continue; }
     menu.append(h(`button.popover-item${it.danger ? '.danger' : ''}${it.active ? '.active' : ''}`, {
