@@ -214,7 +214,7 @@
   .facts .container { grid-template-columns: repeat(2, 1fr); }
   .card-grid { grid-template-columns: repeat(2, 1fr); }
   .footer-grid { grid-template-columns: 1fr 1fr; }
-  .prose-wrap { grid-template-columns: 1fr; }
+  .prose-wrap { grid-template-columns: minmax(0, 1fr); gap: 32px; }
   .toc { position: static; }
 }
 @media (max-width: 860px) {
@@ -268,3 +268,12 @@
 .auth-card.center { text-align: center; display: grid; justify-items: center; gap: 6px; }
 .auth-card.center .spinner { width: 32px; height: 32px; margin-bottom: 10px; }
 .page-head-cta { margin-top: 24px; }
+@media (max-width: 640px) {
+  .hero-cta .btn, .cta-band .btn-row .btn { flex: 1 1 100%; }
+  .cta-band .btn-row { width: 100%; }
+}
+.prose { min-width: 0; }
+@media (max-width: 760px) {
+  .prose table { display: block; overflow-x: auto; white-space: nowrap; }
+  .prose td { white-space: normal; min-width: 160px; }
+}
