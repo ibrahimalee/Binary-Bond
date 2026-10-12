@@ -19,22 +19,47 @@
 
   <main>
     <section class="hero">
-      <div class="container hero-grid">
-        <div>
-          <h1>Video meetings that stay between the people in them.</h1>
-          <p class="lede">BinaryBond connects devices directly and encrypts everything end to end. Start a meeting in one click. No account, no download, and nothing stored on our side.</p>
+      <img class="hero-photo" src="/img/hero-call.jpg" width="1920" height="1080" fetchpriority="high" alt="A woman smiles while talking to a colleague on a video call from her desk">
+      <div class="hero-shade" aria-hidden="true"></div>
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <p class="hero-badge"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg>Private by default</p>
+          <h1>Private video meetings. Encrypted end to end, stored nowhere.</h1>
+          <p class="lede">BinaryBond connects people directly, so what you say and share never passes through a server that can read it. No account, no tracking and no recordings kept.</p>
           <div class="hero-cta">
-            <a class="btn btn-primary btn-lg" href="/new"><svg class="ic"><use href="#i-cam"/></svg>Start a meeting</a>
-            <a class="btn btn-lg" href="/join">Join with a link</a>
+            <a class="btn btn-primary btn-lg" href="/new"><svg class="ic" aria-hidden="true"><use href="#i-cam"/></svg>Start a private meeting</a>
+            <a class="btn btn-lg btn-light" href="/join">Join with a link</a>
           </div>
-          <div class="hero-note">
-            <span><svg class="ic"><use href="#i-check"/></svg>End-to-end encrypted</span>
-            <span><svg class="ic"><use href="#i-check"/></svg>No sign-up</span>
-            <span><svg class="ic"><use href="#i-check"/></svg>Runs in your browser</span>
-          </div>
+          <ul class="hero-note">
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>No account or download</li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>No cookies or trackers</li>
+            <li><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>Open for self-hosting</li>
+          </ul>
         </div>
+        <div class="hero-floats" aria-hidden="true">
+          <div class="shot-float f1"><span class="badge-ic"><svg class="ic"><use href="#i-shield"/></svg></span><div><strong>End-to-end encrypted</strong><span class="muted">Safety number verified</span></div></div>
+          <div class="shot-float f2"><span class="badge-ic accent"><svg class="ic"><use href="#i-eye-off"/></svg></span><div><strong>Nothing is recorded</strong><span class="muted">Only people in the call</span></div></div>
+        </div>
+      </div>
+    </section>
 
-        <div class="hero-visual">
+    <section class="facts" aria-label="Highlights">
+      <div class="container">
+        <div class="fact"><svg class="ic"><use href="#i-lock"/></svg><div><strong>Encrypted end to end</strong><span>Audio, video, chat and files</span></div></div>
+        <div class="fact"><svg class="ic"><use href="#i-link"/></svg><div><strong>No account needed</strong><span>Share a link and start talking</span></div></div>
+        <div class="fact"><svg class="ic"><use href="#i-people"/></svg><div><strong>Up to 8 people</strong><span>Every connection is direct</span></div></div>
+        <div class="fact"><svg class="ic"><use href="#i-server"/></svg><div><strong>Self-hostable</strong><span>Run it on your own server</span></div></div>
+      </div>
+    </section>
+
+    <section class="section showcase" aria-labelledby="showcase-title">
+      <div class="container">
+        <div class="section-head center">
+          <span class="eyebrow">Inside a meeting</span>
+          <h2 id="showcase-title">Everything you need, and nothing that watches you</h2>
+          <p>Video, chat, files and a whiteboard in one window. Host controls keep the meeting yours.</p>
+        </div>
+        <div class="hero-visual center-shot">
           <div class="shot" role="img" aria-label="A BinaryBond meeting with four participants">
             <div class="shot-bar"><i></i><i></i><i></i><span><svg class="ic"><use href="#i-lock"/></svg>binarybond.app/room</span></div>
             <div class="shot-body">
@@ -48,17 +73,8 @@
             </div>
           </div>
           <div class="shot-float f1"><span class="badge-ic"><svg class="ic"><use href="#i-shield"/></svg></span><div><strong>End-to-end encrypted</strong><span class="muted">Safety number verified with Maya</span></div></div>
-          <div class="shot-float f2"><img class="float-avatar" src="/img/people/p4.svg" alt=""><div><strong>Priya is waiting</strong><span class="muted">Admit to the meeting?</span></div></div>
+          <div class="shot-float f2"><img class="float-avatar" src="/img/people/p4.svg" alt="" width="36" height="36"><div><strong>Priya is waiting</strong><span class="muted">Admit to the meeting?</span></div></div>
         </div>
-      </div>
-    </section>
-
-    <section class="facts" aria-label="Highlights">
-      <div class="container">
-        <div class="fact"><svg class="ic"><use href="#i-lock"/></svg><div><strong>Encrypted end to end</strong><span>Audio, video, chat and files</span></div></div>
-        <div class="fact"><svg class="ic"><use href="#i-link"/></svg><div><strong>No account needed</strong><span>Share a link and start talking</span></div></div>
-        <div class="fact"><svg class="ic"><use href="#i-people"/></svg><div><strong>Up to 8 people</strong><span>Every connection is direct</span></div></div>
-        <div class="fact"><svg class="ic"><use href="#i-server"/></svg><div><strong>Self-hostable</strong><span>Run it on your own server</span></div></div>
       </div>
     </section>
 
